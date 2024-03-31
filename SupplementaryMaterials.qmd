@@ -42,13 +42,14 @@ library(GGally)
 library(ggpubr)
 library(lmeresampler) # for bootstrapping
 library(lme4) # for bootstrapping too
+library(sjPlot) # for diagnostic plots
 
 ## Knitting options:
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE,   
                       fig.pos = "!H", # default code chunk options
                       fig.width=10, fig.height=7, fig.align="center", comment=NA, 
                       fig.path="./figures/",                                      
-                      dpi=300, dev="jpeg", cache=FALSE, autodep=TRUE);              
+                      dpi=100, dev="jpeg", cache=FALSE, autodep=TRUE);              
 
 ## Various folders:
 if( !dir.exists("./figures") ) dir.create("./figures", showWarnings=FALSE)
@@ -270,7 +271,7 @@ compute_adapt4<- function(latest_it, listen, produce){
 # --- READ FILES for DATA--- #
 
 # enter path file
-pathfiles = "C:/Users/Mathilde JOSSERAND/Documents/ExpCommunityVariation/InputFiles/Data_processed/"
+pathfiles = "C:/Users/Mathilde JOSSERAND/Documents/ExpCommunityVariation/InputFiles/Data/"
 
 # list all files in the folder
 lfiles = list.files(path=pathfiles, pattern=NULL, all.files=FALSE,full.names=FALSE)
@@ -320,9 +321,9 @@ df <- df%>%
 
 # create a column with distance with init label
 # use loop because impossible to run directly
-df$DistInitLabel <- NA
+df$ProducSim <- NA
 for (row in c(1:nrow(df))){
-  df$DistInitLabel[row] <- 1 - normdist(df$Word[row], as.character(df$Shape[row]))
+  df$ProducSim[row] <- 1 - normdist(df$Word[row], as.character(df$Shape[row]))
 }
 
 
@@ -370,41 +371,42 @@ for (row in c(1:nrow(df))){
 # 
 # for (row in c(1:nrow(df))){
 #   if ((df$GroupType[row] =="Control") | (df$Producer[row] != 1) | (df$Producer[row]==1 & df$Shape[row]=="esip") | (df$Producer[row] ==1 & df$Shape[row]=="nus")) {
-#     df$DistInitLabel2[row] <- df$DistInitLabel[row]
+#     df$ProducSim[row] <- df$DistInitLabel[row]
 #   }
 #   else if (df$Shape[row]=="aike"){
-#     df$DistInitLabel2[row] <-  min(lev_word_listword(list_aike, df$Word[row]))
+#     df$ProducSim[row] <-  min(lev_word_listword(list_aike, df$Word[row]))
 #   }
 #   else if (df$Shape[row]=="anap"){
-#     df$DistInitLabel2[row] <-  min(lev_word_listword(list_anap, df$Word[row]))
+#     df$ProducSim[row] <-  min(lev_word_listword(list_anap, df$Word[row]))
 #   }
 #   else if (df$Shape[row]=="nekuki"){
-#     df$DistInitLabel2[row] <-  min(lev_word_listword(list_nekuki, df$Word[row]))
+#     df$ProducSim[row] <-  min(lev_word_listword(list_nekuki, df$Word[row]))
 #   }
 #   else if (df$Shape[row]=="puak"){
-#     df$DistInitLabel2[row] <-  min(lev_word_listword(list_puak, df$Word[row]))
+#     df$ProducSim[row] <-  min(lev_word_listword(list_puak, df$Word[row]))
 #   }
 #   else if (df$Shape[row]=="nusa"){
-#     df$DistInitLabel2[row] <-  min(lev_word_listword(list_nusa, df$Word[row]))
+#     df$ProducSim[row] <-  min(lev_word_listword(list_nusa, df$Word[row]))
 #   }
 #   else if (df$Shape[row]=="kesip"){
-#     df$DistInitLabel2[row] <-  min(lev_word_listword(list_kesip, df$Word[row]))
+#     df$ProducSim[row] <-  min(lev_word_listword(list_kesip, df$Word[row]))
 #   }
 # }
 
-## INSTEAD we compute it based on the manual coding
+### We also tried a manual coding, based on a previous algorithm, but we don't keep it either
+## indeed, it was less biased than the previous method but still quite biased
+## this data was available in a folder called "Data_processed"
 
-
-for (row in c(1:nrow(df))){
-  if ( !(df$GroupType[row] == "Hetero" & df$Producer[row] == 1 & df$Shape[row] !="nus" & df$Shape[row] != "esip") ){
-    df$distance[row] <- 1 - as.numeric(normdist(df$Word[row], as.character(df$Shape[row])))
-  } else {
-    df$distance[row] <- 1 - as.numeric(df$distance[row])
-  }
-}
-df <- df %>% 
-  dplyr::rename(DistInitLabel2 = distance) %>%
-  mutate(DistInitLabel2 = replace_na(DistInitLabel2, 1))
+# for (row in c(1:nrow(df))){
+#   if ( !(df$GroupType[row] == "Hetero" & df$Producer[row] == 1 & df$Shape[row] !="nus" & df$Shape[row] != "esip") ){
+#     df$distance[row] <- 1 - as.numeric(normdist(df$Word[row], as.character(df$Shape[row])))
+#   } else {
+#     df$distance[row] <- 1 - as.numeric(df$distance[row])
+#   }
+# }
+# df <- df %>% 
+#   dplyr::rename(ProducSim = distance) %>%
+#   mutate(ProducSim = replace_na(ProducSim, 1))
 
 
 
@@ -442,15 +444,17 @@ df_other <- df_other %>%
 
 # Method
 
-This part provide additional information concerning the Method. For the general design, please refer to the paper.
+This section provides additional information concerning the Method. For the general design, please refer to the main text.
 
 ## Participants
 
-`r nrow(df_other)` participants participated in this study (`r nrow(df_other[df_other$Gender=="F",])` women and `r nrow(df_other[df_other$Gender=="M",])` men. They were between the ages of 18 and 50 (M= `r round(mean(df_other$Age))`, SD=`r round(sd(df_other$Age))` . Please refer to [Predictors] to see more about the distribution of age, gender, and other measures.
+`r nrow(df_other)` participants participated in this study (`r nrow(df_other[df_other$Gender=="F",])` women and `r nrow(df_other[df_other$Gender=="M",])` men). They were between the ages of 18 and 50 (M= `r round(mean(df_other$Age))`, SD=`r round(sd(df_other$Age))` ). Please refer to [Predictors] to see more about the distribution of age, gender, and other measures.
 
 ## Setup
 
-![**Illustration 1.** The experimental design. Participants were sitting face to face on the chairs.](Pictures/Photo_Design.jpg){alt="Illustration 2. Visual representation of the procedure. See below for more information."}
+The setup is composed of four tables (labeled "A," "B," "C," and "D"), each hosting a computer. Tables "A" and "C" are facing each other, and tables "B" and "D" too. Curtains are placed between the pair of table AC and BD to prevent the pairs of individuals sitting at one block of table from observing those at another. Stickers are affixed to the computer keyboards to indicate which keys participants can press. Following each round, two out of the four participants switch tables, taking their computers with them. The designated table to which they need to go is specified both in the computer program and on a piece of paper attached to the computer. The laptops are placed on a rotating device, which makes it easier for the participant to rotate their screen. When they arrived to the room, the first thing they do is to read and sign the consent form. Participants were paid 21 euros for their participation.
+
+![**Illustration 1.** The experimental design. Participants were sitting face to face on the chairs.](Pictures/Photo_Design.jpg){alt="Illustration 2. Visual representation of the procedure. Please note that there also two more tables. See below for more information."}
 
 ## Stimuli
 
@@ -458,7 +462,7 @@ Stimuli were squares of size 300\*300 pixel when being presented the 8 together,
 
 ## Procedure
 
-Here are presented the instructions foe each part.
+Here are presented the instructions for each part.
 
 -   **Passive exposure:** Dadelijk zie je een aantal afbeeldingen een voor een op het scherm verschijnen samen met het woord in fantasietaal dat die afbeelding beschrijft. Probeer zo goed mogelijk het juiste woord bij elke afbeelding te onthouden.
 
@@ -467,8 +471,6 @@ Here are presented the instructions foe each part.
 -   **Communication game, Guesser:** Je partner heeft een afbeelding gezien en een woord getypt om het te beschrijven. Lees het woord op de computer van je partner en kies de juiste afbeelding uit de 8 mogelijke afbeeldingen (gebruik 1-2-3-4-5-6-7-8 op het toetsenbord om een keuze te maken). Je krijgt feedback over je keuze, probeer er van te leren. Maak tijdens het experiment zo min mogelijk fouten! Vergeet niet om de feedback aan je partner te laten zien. Je krijgt feedback over je keuze, probeer daarvan te leren
 
 -   **Communication game, Producer:** Nu krijg je een afbeelding te zien. Denk na over hoe je het zou noemen en druk op Enter als je klaar bent om te typen. Als je klaar bent met het schrijven van het woord, druk je nogmaals op enter en draai je de computer zodat je partner het woord kan lezen en kan raden welke afbeelding je beschrijft. Tijdens deze taak mag je de taal niet wijzigen naar Nederlands of andere bestaande talen. Gebruik ook niets dat heel erg op het Nederlands of andere talen lijkt. Ook mag je geen Nederlandse afkortingen, afkortingen of acroniemen gebruiken. Let op, je kunt niet alle letters gebruiken: alleen de letters die zichtbaar zijn op het toetsenbord kunnen worden gebruikt.
-
-<!-- -->
 
 -   **Testing (Round 10):** Nu hoef je niet meer met je partner te communiceren. U moet een reeks afbeeldingen een naam geven in de nieuwe taal die u gebruikte.
 
@@ -562,7 +564,7 @@ Stel je voor dat ik je een extra bedrag van 100 euro geef vanwege de uitstekende
 
 The task-switching experiment adapted from Roger and Monsell's paradigm. An online version is available to try at this address: <https://www.psytoolkit.org/experiment-library/taskswitching.html>
 
-The code of the task-switching experiment and the prosciality experiment are all available in the same file as for the code of the main experiment (see my github [mathjoss/ExpCommunityVariation](https://github.com/mathjoss/ExpCommunityVariation)).
+The code of the task-switching experiment and the prosociality experiment are all available in the same file as for the code of the main experiment (see my github [mathjoss/ExpCommunityVariation](https://github.com/mathjoss/ExpCommunityVariation)).
 
 ![**Illustration 2.** Instructions for the task-switching experiment as presented to the participant. The front line shows the "letter task" (press Q for consonants and P for vowels) and the bottom line shows the instructions for the "number task" (press Q for odd numbers and P for even numbers). The participant is first trained only with the first row (the combination of letter/number alternatively switch from the left to the right), then with the number task only in the bottom. After, the participant performed both conditions (letter task and number task) at the same time (the combination of letter number/number successively switch from up left, to up right, to bottom right, to bottom left.)](Pictures/InstructionsTask.PNG){width="527"}
 
@@ -578,7 +580,7 @@ Throughout the results, we will use the following terminology:
 
 -   *Initial labels* refers to the 8 initial words used to describe aliens presented in the passive exposure
 
--   *Unbiased participants* are participant 2, 3, and 4 (who can produce all letters) and *biased participant* designate participant 1 (who can not produce a and k). This is consistent across all groups.
+-   *Unbiased participants* are participants 2, 3, and 4 (who can produce all letters) and *biased participant* refers to participant 1 (who cannot produce a and k). This is consistent across all groups.
 
 -   *Unbiased letters* designate letters who can be produced by all participants (p, s, n, e, i, u) and *biased letters* designate the 2 letters that cannot be produced by the biased participants
 
@@ -586,11 +588,11 @@ Throughout the results, we will use the following terminology:
 
 We proceed and clean the files using the following methods:
 
-After each group passation, we use the file `CleanUpFiles.R` to perform the following steps:
+After each group passation, we use `CleanUpFiles.R` to perform the following steps:
 
-1.  **Data.** merge the dataset obtained from the 4 participants into 1 single file using the R file
+1.  **Data.** merge the dataset obtained from the 4 participants into 1 single file using the R script
 
-2.  **Prosociality**. For each participant, we compute the total prosociality score by additioning the results on each question
+2.  **Prosociality**. For each participant, we compute the total prosociality score by additionning the results on each question
 
 3.  **Inverse efficiency.** For each participant, we compute the inverse efficiency, where inverse efficiency is defined as $mean(time)/mean(accuracy)$
 
@@ -1150,11 +1152,11 @@ kable(last_name)
 
 ## 0 - Understanding the results
 
-### Accuracy Learning
+### Learning Accuracy
 
 Here, we examine how well the participants remembered the initial labels for the images, looking at the labels written by the participants during the *FirstTesting*.
 
-Accuracy is **binary**: a value of 1 indicates correct recall by the participant, while a value of 0 signifies the presence of at least one error. However, we made an exception for the biased participant. In their case, their responses were considered "correct" if they substituted the biased letter they were unable to produce with another letter, or if they omitted it.
+Accuracy is **binary**: a value of 1 indicates correct recall by the participant, while a value of 0 signifies the presence of at least one error. However, we made an exception for the biased participant. In their case, their responses were considered "correct" if they substituted the biased letter they were unable to produce with another letter, or if they omitted it. Please note that for the biased participant in the heterogeneous groups, we **manually** coded the accuracy, only for the pre-communication (round 0) testing moment. Indeed, we only look at this measure in this context.
 
 ```{r }
 #| echo: false
@@ -1211,14 +1213,14 @@ Accuracy is **binary**: a value of 1 indicates correct recall by the participant
 
 ### Initial production similarity
 
-Participants were presented with the following **initial labels** during the passive exposure phase: kesip, esip, nusa, nus, aike, puak, nekuki, and anap. Our analysis focuses on the differences between participants' first productions (during FirstTesting) and the initial labels. To do this, we computed the normalized Levenshtein distance between the initial labels and the initial productions.
+Participants were presented with the following **initial labels** during the passive exposure phase: kesip, esip, nusa, nus, aike, puak, nekuki, and anap. Our analysis focuses on the differences between participants' first productions (during FirstTesting) and the initial labels. To do this, we computed the normalized Levenshtein distance between the initial labels and the initial productions. Please note that we tried to find a way to compute an exception for the biased participant, in a similar way as we did for the learning accuracy. However, we could not find a solution that would not "advantage" or "disandvantage" the biased participant. Thus, when plotting the results from the initial production similarity, we removed the biased participant, in order to have two sets of data which are comparable.
 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
 #| label: fig-learning
-#| fig-cap: "Learning success (accuracy on the left, initial production similarity on the right) per group type. Dots indicate each participant. The red dot shows the mean of the group, and red pointrange shows the standard error."
+#| fig-cap: "Learning success (accuracy on the left, initial production similarity on the right) per group type. Dots indicate each participant. The red dot shows the mean of the group, and red point range shows the standard error."
 #| fig-width: 10
 #| fig-height: 5
 
@@ -1246,9 +1248,10 @@ df_agg_acc <- df %>%
 #   dplyr::summarize(mean_lev_dis = mean(DistInitLabel)) 
 
 df_agg_dist2 <- df %>%
-  filter(TypeTest == "FirstTesting") %>%
+  filter(TypeTest == "FirstTesting",
+         !(Producer == 1 & GroupType=="Hetero")) %>%
   dplyr::group_by(Producer, GroupNum, GroupType) %>%
-  dplyr::summarize(mean_lev_dis = mean(DistInitLabel2))  %>%
+  dplyr::summarize(mean_lev_dis = mean(ProducSim))  %>%
   mutate(GroupID = paste(GroupType, GroupNum, sep="_"))
 
 
@@ -1300,12 +1303,21 @@ summary(model_acc)
 
 ```
 
-With **initial production similarity**:
+With **initial production similarity**: (please note that here, we look at a model that include all productions from the control groups, but only production from participant 2, 3, and 4 in the heterogenous groups, since the biased compared cannot be directly compared to them).
 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
+
+# remove biased participant
+df_agg_dist2 <- df %>%
+  filter(TypeTest == "FirstTesting",
+         !(Producer == 1 & GroupType=="Hetero")) %>%
+  dplyr::group_by(Producer, GroupNum, GroupType) %>%
+  dplyr::summarize(mean_lev_dis = mean(ProducSim))  %>%
+  mutate(GroupID = paste(GroupType, GroupNum, sep="_"))
+
 
 # linear mixed effect model with distance to initial labels
 model_dist <- lmer(mean_lev_dis ~ GroupType + (1 | GroupID), data=df_agg_dist2)
@@ -1327,17 +1339,18 @@ Looking at each shape:
 
 # compute accuracy learning for each shape
 df_agg_acc <- df %>%
-  filter(TypeTest == "FirstTesting" ) %>%
+  filter(TypeTest == "FirstTesting") %>%
   dplyr::group_by(GroupType, Shape) %>%
   dplyr::summarize(mean_acc = mean(ACC)*100,
                    se_acc = se(ACC)*100)
 
 # compute production similarity for each shape
 df_agg_dist <- df %>%
-  filter(TypeTest == "FirstTesting" ) %>%
+  filter(TypeTest == "FirstTesting",
+         !(Producer == 1 & GroupType=="Hetero")) %>%
   dplyr::group_by(GroupType, Shape) %>%
-  dplyr::summarize(mean_lev_dis = mean(DistInitLabel2),
-                   se_lev_dis = se(DistInitLabel2))
+  dplyr::summarize(mean_lev_dis = mean(ProducSim),
+                   se_lev_dis = se(ProducSim))
 
 
 # plot accuracy learning for each shape
@@ -1382,8 +1395,8 @@ df_dist <- df %>%
   filter(TypeTest == "FirstTesting") %>%
   mutate(Shape = as.character(Shape)) %>%
   dplyr::group_by(Producer, GroupNum, GroupType) %>%
-  dplyr::summarize(DistInitWords = mean(DistInitLabel))  %>%
-  dplyr::select(Producer, GroupNum, DistInitWords, GroupType) %>%
+  dplyr::summarize(ProducSim = mean(ProducSim))  %>%
+  dplyr::select(Producer, GroupNum, ProducSim, GroupType) %>%
   dplyr::rename(PartID = Producer)  
   
 ## merge with previous data
@@ -1418,7 +1431,7 @@ p7 <- ggplot(df_other, aes(x=AccLearning, fill=GroupType)) +
   geom_density(alpha=0.5) +   
   guides(fill=FALSE) 
 
-p8 <- ggplot(df_other, aes(x=DistInitWords, fill=GroupType)) +   
+p8 <- ggplot(df_other, aes(x=ProducSim, fill=GroupType)) +   
   geom_density(alpha=0.5) 
 
 ggarrange(p1, p2, p3, p4, p5, p6, p7, p8, ncol=4, nrow=2, labels="AUTO", common.legend = TRUE, legend="bottom", font.label = list(size = 16, color = "black"))
@@ -1436,8 +1449,8 @@ mod_dg <- t.test(df_other$DictatorGame[df_other$GroupType=="Hetero"], df_other$D
 mod_age <- t.test(df_other$Age[df_other$GroupType=="Hetero"], df_other$Age[df_other$GroupType=="Control"])
 mod_sex <- chisq.test(table(df_other$Gender, df_other$GroupType))
 mod_acc <- t.test(df_other$AccLearning[df_other$GroupType=="Hetero"], df_other$AccLearning[df_other$GroupType=="Control"])
-mod_dist <- t.test(df_other$DistInitWords[df_other$GroupType=="Hetero"], df_other$DistInitWords[df_other$GroupType=="Control"])
-mod_dist2 <- t.test(df_other$DistInitWords[df_other$GroupType=="Hetero" & df_other$PartID!=1], df_other$DistInitWords[df_other$GroupType=="Control" & df_other$PartID!=1])
+mod_dist <- t.test(df_other$ProducSim[df_other$GroupType=="Hetero"], df_other$ProducSim[df_other$GroupType=="Control"])
+mod_dist2 <- t.test(df_other$ProducSim[df_other$GroupType=="Hetero" & df_other$PartID!=1], df_other$ProducSim[df_other$GroupType=="Control" & df_other$PartID!=1])
 
 ```
 
@@ -1456,9 +1469,9 @@ None of these values are significant, except for the distance to initial words. 
 
 ### Strategy
 
-In this part, we only at the patterns observed in the **heterogenous groups**.
+In this part, we only look at the patterns observed in the **heterogenous groups**.
 
-What are the strategies used by the biased participant to produce the initial labels before communicating? In this table, we count the number of time each biased participant has performed:
+What are the strategies used by the biased participant to produce the initial labels before communicating? In this table, we count the number of times each biased participant has performed:
 
 -   *removal* means that the biased participant remembered the label, and decided to remove the biased letter
 
@@ -1500,7 +1513,7 @@ rownames(strat_end_biased) = c("Group1", "Group2", "Group3", "Group4", "Group5",
 kable(strat_end_biased)
 ```
 
-These tables concerned only the biased participant. Then, we can also look at the productions of the unbiased participants after they communicated (during the final testing) to look at their adaptative strategy. Please note that we do not look here at the labels that does not feature biased letters (nus and esip), only the 6 other that feature at least one biased letter. Here are the following possible options:
+These tables concerned only the biased participants. We can also look at the productions of the unbiased participants after they communicated (during the final testing) to look at their adaptative strategy. Please note that we only look here at the labels featuring one or two biased letters (all labels but nus and esip). Here are the following possible options:
 
 -   *SameBiased_Removed*: used the same label as the biased participant, in the case where the biased participant has removed a biased letter
 
@@ -1510,11 +1523,11 @@ These tables concerned only the biased participant. Then, we can also look at th
 
 -   *InitialLabel*: used the initial label, even if the biased participant cannot use it the same way
 
--   *DiffBiased_Adapt*: use a different label as the biased participant, however this new label does not feature biased letter
+-   *DiffBiased_Adapt*: use a different label from the biased participant, however this new label does not feature biased letter
 
--   *DiffBiased_ABitAdapt*: use a different label as the biased participant, this new label features slightly less biased letters than the original label (namely, instead of 2 biased letters, there is only one biased letter)
+-   *DiffBiased_ABitAdapt*: use a different label from the biased participant, this new label features slightly less biased letters than the original label (namely, instead of 2 biased letters, there is only one biased letter)
 
--   *DiffBiased_NonAdapt*: use a different label as the biased participant (which is also not the initial label), and that feature biased letters
+-   *DiffBiased_NonAdapt*: use a different label from the biased participant and from the initial label, featuring biased letters
 
 ```{r}
 strat_adapt = data.frame(SameBiased_Removed=c(0,0,0,0,3,0,0), 
@@ -1539,17 +1552,23 @@ If they do not adapt, either by using the initial label that contains as many bi
 
 ### Summary results
 
--   performance of learning (both using accuracy index and distance to initial learning) are similar between control and heterogenous groups
+-   learning performance (both using accuracy index and distance to initial learning) are similar between control and heterogenous groups
 
 -   some words are easier to remember compared to other (such as *aike* or *nus*)
 
--   the participants characteristics are similar between control and heterogenous groups (in average, they have approximately the same age, but also personal characteristics such as working memory, cognitive flexibility...)
+-   the participant characteristics are similar between control and heterogenous groups (in average, they have approximately the same age, but also personal characteristics such as working memory, cognitive flexibility...)
 
--   in order to compensate with their difference, biased participants either labels either switch the biased letter with another letter. After communicating, they also come up with new words
+-   in order to compensate for their difference, biased participants either remove the biased letter(s) or switch them to another letter. After communicating, they also come up with new words
 
--   unbiased participants adapt mostly by using another label which does not feature any biased letter (or less), and sometimes they adapt by copying the label used by the biased participant
+-   unbiased participants adapt mostly by using another label which does not feature any biased letter (or less frequently), and sometimes they adapt by copying the label used by the biased participant
 
 ## 1 - How heterogeneity may affect language evolution
+
+In this part, we will find the plots and the models that are referred in the main paper as:
+
+-   model 1 and model 1 bis, in the part [Communicative success]
+-   model 2 and model 2 bis, in the part [Convergence]
+-   model 3 and model 3 bis, in the part [Evolution of production similarity]
 
 ### Communicative success
 
@@ -1566,7 +1585,7 @@ We look at the evolution of communicative success for each group:
 #| fig-width: 9
 #| fig-height: 7
 
-# aggregagte accuracy by group number and group type, and Round
+# aggregated accuracy by group number and group type, and Round
 df %>%
   filter(TypeTest == "ComGame") %>%
   group_by(Round, GroupNum, GroupType) %>%
@@ -1599,6 +1618,7 @@ Let's look at the aggregated performance for each group type:
 #| fig-width: 8 
 #| fig-height: 5   
 
+# aggregate data
 df %>%      
   filter(TypeTest == "ComGame") %>%      
   group_by(Round, GroupType) %>%      
@@ -1627,11 +1647,14 @@ These plots raise two questions:
 
 To investigate these questions, we build a *linear mixed-effect models* using the group type (hetero versus control) and the round as fixed effect. We use the aggregated data by pair, and we control for the random effect of Group Number.
 
+**Model 1**:
+
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
 
+# aggregate data
 df_agg <- df %>%
   filter(TypeTest == "ComGame") %>%
   group_by(Round, GroupNum, GroupType, pair) %>%
@@ -1639,17 +1662,23 @@ df_agg <- df %>%
   mutate(Round2 = ifelse(Round == 9, 0, ifelse(Round==8, 1, ifelse(Round==7, 2, ifelse(Round==6, 3, ifelse(Round==5, 4, ifelse(Round==4, 5, ifelse(Round==3, 6, ifelse(Round==2, 7, ifelse(Round==1, 8)))))))))) %>%
   mutate(GroupID = paste(GroupType, GroupNum, sep="_"))
 
+# model
 model <- lmer(mean_acc ~ GroupType * Round2 + (1  | GroupID), data = df_agg)
 summary(model)
+
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
 ```
 
-There is a significant variation in performance within each condition (control and heterogenous), with **lower performance observed in the heterogenous groups**. Notably, one group (group 2) had a very high performance. Furthermore, communicative success is significantly improving with time for both groups, but no interaction effect between group type and time is present.
+There is a significant improvement in performance with time in both conditions (control and heterogenous), as shown by the main effect of the Round2 variable. A **lower performance is observed in the heterogenous groups** than in the control group, as shown by the main effect of the GroupType variable depsite the very high performance reached by heterogenous Group 2. Moreover, no interaction effect between group type and round is present.
 
-From this plot, it is evident that the average communicative success is lower in heterogeneous groups compared to control groups. However, it could be due to the fact that heterogeneous groups include interactions with a biased participants. Thus, it is interesting to split the heterogeneous groups into two categories:
+From this analysis, it is clear that the average communicative success is lower in heterogeneous groups compared to control groups. However, it could be due to the fact that heterogeneous groups include interactions with a biased participants. Thus, it is interesting to split the heterogeneous groups into two categories:
 
--   **Hetero_biased** (pairs in the heterogeneous groups that contain the biased participants: 1-2, 1-3, 1-4)
+-   **Hetero_biased** (pairs in the heterogeneous groups involving the biased participant: 1-2, 1-3, 1-4)
 
--   **Hetero_nonbiased** (pairs in the heterogeneous groups that does ***not*** contain the biased participant: 2-3, 2-4, 3-4).
+-   **Hetero_nonbiased** (pairs in the heterogeneous groups that do ***not*** involve the biased participant: 2-3, 2-4, 3-4).
 
 This could lead to two different scenarios:
 
@@ -1666,6 +1695,7 @@ This could lead to two different scenarios:
 #| fig-width: 6
 #| fig-height: 6 
 
+# aggregate data
 df_agg <- df %>%   
   filter(TypeTest == "ComGame") %>%   
   mutate(type = ifelse( GroupType == "Control", "Control", ifelse(Producer == 1 | Guesser == 1, "Hetero With Biased", "Hetero Without Biased"))) %>%   
@@ -1674,8 +1704,6 @@ df_agg <- df %>%
             se_acc = se(ACC)*100) %>%   
   mutate(Round = as.factor(Round),          
          type = as.factor(type))    
-
-
 
 # Plot        
 p_comsuccess <- ggplot(df_agg, aes(x=Round, y=mean_acc, color=type, group=type))+ 
@@ -1693,7 +1721,7 @@ p_comsuccess <- p_comsuccess +
 p_comsuccess 
 ```
 
-The plot suggests that **hypothesis 2 is supported**: the presence of the biased participant has introduced confusion within the heterogeneous group, leading to a decrease in the communicative success in all types of pairs. However, in general, the pair with the biased individual achieves a lower accuracy score (in the heterogenous group). We used a mixed-effect model to see if this is statistically significant:
+The plot suggests that **hypothesis 2 is supported**: the presence of the biased participant has introduced confusion within the heterogeneous group, leading to a decrease in the communicative success even in interactions between unbiased participants. However, in general, the pair with the biased individual seems to achieve an even lower accuracy score (in the heterogenous group). We used a mixed-effect model to see if this is statistically significant (this refers to the **model 1 bis** of the main paper:)
 
 ```{r}
 #| echo: false
@@ -1708,9 +1736,14 @@ df_agg <- df %>%
   mutate(Round2 = ifelse(Round == 9, 0, ifelse(Round==8, 1, ifelse(Round==7, 2, ifelse(Round==6, 3, ifelse(Round==5, 4, ifelse(Round==4, 5, ifelse(Round==3, 6, ifelse(Round==2, 7, ifelse(Round==1, 8))))))))))   %>%
   mutate(GroupID = paste(GroupType, GroupNum, sep="_"))
 
+# print summary model
 model <- lmer(mean_acc ~ type*Round2 + (1 | GroupID), data=df_agg)
 summary(model)
 
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
 ```
 
 ```{r}
@@ -1768,7 +1801,7 @@ summary(model)
 
 ```
 
-Let's just compare the pair with the biased participant and the pairs without (please note that pairs with the biased participants are considered to be the pairs with participant 1: so in the control groups, these pairs do not really include a biased participant, it is just in order to have an easy nice way of plotting):
+Let's just compare the pairs with the biased participant to the pairs without. Note that pairs with the biased participants are considered to be the pairs involving participant 1 even in the control groups. This allows us to check that there is no difference between these "sham" biased pairs and the other pairs in the control groups.
 
 ```{r )}
 #| echo: false
@@ -1807,6 +1840,7 @@ Let's just compare the pair with the biased participant and the pairs without (p
 #| fig-width: 8
 #| fig-height: 5
 
+# aggregate data
 df_agg <- df %>%
   mutate(ACC=ACC*100) %>%
   filter(TypeTest == "ComGame" ) %>%
@@ -1817,6 +1851,7 @@ df_agg <- df %>%
   dplyr::summarize(mean_acc2 = mean(mean_acc, na.rm=TRUE), 
             se_acc = se(mean_acc)) 
 
+# plot
 ggplot(df_agg, aes(x=have_biased, y=mean_acc2, group=GroupType, color=GroupType)) +
   geom_line()+
   geom_pointrange(aes(ymin=mean_acc2-se_acc, ymax=mean_acc2+se_acc)) +
@@ -1829,6 +1864,7 @@ ggplot(df_agg, aes(x=have_biased, y=mean_acc2, group=GroupType, color=GroupType)
 #| message: false
 #| warning: false
 
+# aggregate data
 df_agg <- df %>%
   mutate(ACC=ACC*100) %>%
   filter(TypeTest == "ComGame" ) %>%
@@ -1837,9 +1873,14 @@ df_agg <- df %>%
   dplyr::summarize(mean_acc = mean(ACC, na.rm=TRUE)) %>%
   mutate(GroupID = paste(GroupType, GroupNum, sep="_"))
 
+# model
 model <- lmer(mean_acc ~ GroupType * have_biased  + (1 | GroupID), data=df_agg)
 summary(model)
 
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
 
 ```
 
@@ -1849,152 +1890,7 @@ summary(model)
 
 -   Communicative success is higher in control groups
 
--   In heterogeneous groups, communicative success is higher in pairs that do not contain the unbiased individuals. However, the communicative of this type of pairs is still lower than the one in control groups, which suggest that introducing a biased participant has spread some confusion in the whole group.
-
-### Evolution of production similarity
-
-This analysis helps us gain insight into our data. We want to know if participants eventually adopt the initial labels, even if they initially didn't remember them. To find out, we calculate the average Levenshtein distance between participants' productions and the initial labels at each round.
-
-There is subtleties: in biased agents, we **manually** computed the initial distance to the initial words. We applied the following algorithm:
-
--   if the shape is "esip" or "nus": compute the normalized levenshtein distance
-
--   for the other shapes:
-
-    -   if the participant seems to have completely forgotten the word, or used a label for another image, we remove the biased letters from the shape and compute the normalized levenshtein distance. For example, if the shape is "puak" and the participants produced "esip", we compute the normalized levenshtein distance between "puak" and "esip"
-
-    -   if the participants seems to have remember the word (it does not have to be the exact same word, but something similar), we replace or omitted the biased letters using the same strategy as the participant, and compute the normalized levenshtein distance between the two words. For example: if the shape is "nusa" and the participant produced "nusi", we compute the normalized levenshtein distance between "nusi" and "nusi". If the participants produced "nasi", we computed the normalized levenshtein distance between "nasi" and "nusi".
-
-Why did we do this manually? When applying an automatic algorithm (that replace the word produced by the biased participants by a similar version of replacement or letter switch) For the unbiased participants, we just compute the normalized levenshtein distance between their production and the image name.
-
-We look at the evolution of production similarity for each shape:
-
-```{r }
-#| echo: false
-#| message: false
-#| warning: false
-#| label: fig-evolution-distinitwords
-#| fig-cap: "Evolution of the production similarity at each round, for each shape. Please note that this plot does not include the productions of the biased participant."
-#| fig-width: 10
-#| fig-height: 8
-
-# Compute
-df_agg <- df %>%
-  filter(TypeTest != "PassiveExposure") %>%
-  mutate(Shape = as.character(Shape)) %>%
-  dplyr::group_by(GroupType, Round, Shape) %>%
-  dplyr::summarize(mean_lev_dis = mean(DistInitLabel2))
-
-# Plot
-p <- ggplot(df_agg, aes(x=Round, y=mean_lev_dis, color=Shape, group=Shape)) + geom_point()
-p <- add_grey_rect_0_10(p) 
-p <- p + geom_point(size=5) +
-  geom_line(size=1) +
-  facet_grid(GroupType ~ .) +
-  labs(y="Production similarity", fill="Shape") +
-  scale_x_continuous(breaks = c(0:10)) +
-  scale_color_viridis_d()
-p
-```
-
-We observe that **certain shapes are more effectively remembered than others**. For instance, "aike" and "nus" are often well-remembered, while "puak" tends to be frequently forgotten.
-
-This plot also reveals that individuals in the control group eventually converge on the initial labels, even if they initially forget it. However, in the heterogenous group, this convergence does not occur. Participants' productions tend to become slightly closer to the initial labels, but at the end, the words still remain quite different, **even for words that did not contain a biased letter**!
-
-We look at the same plot aggregated by group type:
-
-```{r }
-#| echo: false
-#| message: false
-#| warning: false
-#| label: fig-evolution-distinitwords-agg
-#| fig-cap: "Same plot as above, but aggregated by shape. Please note that this plot does not nclude the productions of the biased participant"
-#| fig-width: 9
-#| fig-height: 6
-
-# Compute
-df_agg <- df %>%
-  filter(TypeTest != "PassiveExposure") %>%
-  dplyr::group_by(GroupType, Round) %>%
-  dplyr::summarize(mean_lev_dis = mean(DistInitLabel2),
-                   se_lev_dis = se(DistInitLabel2))
-
-# Plot
-p <- ggplot(df_agg, aes(x=Round, y=mean_lev_dis, color=GroupType, group=GroupType)) + geom_point()
-p <- add_grey_rect_0_10(p) 
-p <- p + geom_point(size=5) +
-  geom_line(size=1) +
-  labs(y="Production similarity", fill="Shape") +
-  scale_x_continuous(breaks = c(0:10)) +
-  ylim(0.5, 1) +
-  geom_pointrange(aes(ymin=mean_lev_dis-se_lev_dis, ymax=mean_lev_dis+se_lev_dis), lwd=1, size=0.5, alpha=0.8) 
-
-  
-p
-```
-
-```{r}
-# Compute
-df_agg <- df %>%
-  filter(TypeTest != "PassiveExposure") %>%
-  dplyr::group_by(GroupType, Round, GroupNum, Producer) %>%
-  dplyr::summarize(mean_lev_dis = mean(DistInitLabel2)) %>%
-  mutate(Round2 = ifelse(Round == 10, 0, ifelse(Round == 9, 1, ifelse(Round==8, 2, ifelse(Round==7, 3, ifelse(Round==6, 4, ifelse(Round==5, 5, ifelse(Round==4, 6, ifelse(Round==3, 7, ifelse(Round==2, 8, ifelse(Round==1, 9, ifelse(Round==0, 10)))))))))))) %>%
-  mutate(GroupID = paste(GroupType, GroupNum, sep="_"))
-
-summary(lmer(mean_lev_dis ~ GroupType*Round2 + (1 | GroupID), data=df_agg))
-```
-
-Now, we split heterogenous condition in two: participants in heterogenous groups in pairs with (*hetero_biased*) and without (*hetero_unbiased*) the biased participant, similarly with previous plots.
-
-```{r }
-#| echo: false
-#| message: false
-#| warning: false
-#| label: fig-evolution-distinitwords-distinct
-#| fig-cap: "Same plot as above, except that here, we differentiate between pairs interacting with the biased individuals, and pairs interacting without the biased individual."
-#| fig-width: 6
-#| fig-height: 6
-
-# Compute
-df_agg <- df %>%
-  filter(TypeTest == "ComGame") %>%
-  mutate(Condition = ifelse(GroupType == "Control", "Control", ifelse(Producer=="1", "Hetero With Biased", "Hetero Without Biased")),
-         Shape = as.character(Shape)) %>%
-  dplyr::group_by(GroupType, Round, Condition) %>%
-  dplyr::summarize(mean_lev_dis = mean(DistInitLabel2),
-                   se_lev_dis = se(DistInitLabel2))
-
-
-# Plot
-p_distlabel <- ggplot(df_agg, aes(x=Round, y=mean_lev_dis, color=Condition, group=Condition)) + geom_point()
-p_distlabel <- add_grey_rect_1_9(p_distlabel) 
-p_distlabel <- p_distlabel + geom_point(size=5) +
-  geom_line(size=1) +
-  labs(y="Production similarity", fill="", color="") +
-  scale_x_continuous(breaks = c(1:9)) +
-  theme(legend.position="bottom") +
-  ylim(0.4,1) +
-  geom_pointrange(aes(ymin=mean_lev_dis-se_lev_dis, ymax=mean_lev_dis+se_lev_dis), lwd=1, size=0.5) +
-  scale_color_viridis_d(end=0.8) 
-
-p_distlabel
-```
-
-```{r}
-# Compute
-df_agg <- df %>%
-  filter(TypeTest == "ComGame") %>%
-  mutate(Condition = ifelse(GroupType == "Control", "Control", ifelse(Producer=="1", "Hetero With Biased", "Hetero Without Biased")), Shape = as.character(Shape)) %>%
-  dplyr::group_by(GroupType, Round, Condition, GroupNum) %>%
-  dplyr::summarize(mean_lev_dis = mean(DistInitLabel2))  %>%
-  mutate(Round2 = ifelse(Round == 10, 0, ifelse(Round == 9, 1, ifelse(Round==8, 2, ifelse(Round==7, 3, ifelse(Round==6, 4, ifelse(Round==5, 5, ifelse(Round==4, 6, ifelse(Round==3, 7, ifelse(Round==2, 8, ifelse(Round==1, 9, ifelse(Round==0, 10)))))))))))) %>%
-  mutate(GroupID = paste(GroupType, GroupNum, sep="_"))
-
-summary(lmer(mean_lev_dis ~ Condition*Round2 + (1 | GroupID), data=df_agg))
-```
-
-The observable difference between the biased and unbiased participants in the heterogeneous groups could be attributed to two factors. First, there might genuinely be a difference, and by chance, biased participants may have remembered the initial labels better than unbiased participants. Alternatively, it is possible that the method we used to measure production similarity in biased participants has inherent flaws, and the algorithm may be, in a sense, more favorable to biased participants.
+-   In heterogeneous groups, communicative success is higher in pairs that do not contain the biased individuals. However, the communicative of this type of pairs is still lower than the one in control groups, which suggests that introducing a biased participant has spread some confusion in the whole group.
 
 ### Convergence
 
@@ -2021,6 +1917,7 @@ The plot below includes the production of all participants, including the biased
 #| fig-width: 10
 #| fig-height: 8
 
+# aggregate data
 df_agg <- df %>%
   filter(TypeTest != "PassiveExposure")   %>%
   dplyr::group_by(GroupType, GroupNum, Shape, Round) %>%
@@ -2028,7 +1925,7 @@ df_agg <- df %>%
   dplyr::group_by(GroupType, GroupNum, Round) %>%
   dplyr::summarise(mean_lev_dist = mean(lev_dist_list))
 
-
+# plot
 p <- ggplot(df_agg, aes(x=Round, y=mean_lev_dist, color=GroupNum, group=GroupNum)) +
   geom_point()
 p <- add_grey_rect_0_10(p)
@@ -2095,6 +1992,8 @@ First, we look at the convergence with all participants:
 #| fig-cap: "Same, but aggregated by group."
 #| fig-width: 6
 #| fig-height: 6
+
+# aggregate data
 df_agg <- df %>%
   filter(TypeTest != "PassiveExposure")   %>%
   dplyr::group_by(GroupType, GroupNum, Shape, Round) %>%
@@ -2103,6 +2002,7 @@ df_agg <- df %>%
   dplyr::summarise(All = mean(lev_dist_list),
                    se_lev = se(lev_dist_list))
 
+# plot
 p <- ggplot(df_agg, aes(x=Round, y=All, color=GroupType, fill=GroupType)) + geom_point()
 p <- add_grey_rect_0_10(p)
 p <- p + geom_point(size=5) +
@@ -2118,8 +2018,10 @@ p
 
 ```
 
-```{r}
+And we look at the model comparing control and heterogenous groups. This refers to the **model 2** of the paper:
 
+```{r}
+# aggregate data
 df_agg <- df %>%
   filter(TypeTest != "PassiveExposure")   %>%
   dplyr::group_by(GroupType, GroupNum, Shape, Round) %>%
@@ -2130,9 +2032,15 @@ df_agg <- df %>%
   mutate(Round2 = as.numeric(Round2)) %>%
   mutate(GroupID = paste(GroupType, GroupNum, sep="_"))
 
-
+# model
 model <- lm(All ~ GroupType * Round2, data = df_agg)
 summary(model)
+
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
 
 ```
 
@@ -2150,6 +2058,7 @@ Then, we look at:
 #| fig-width: 6
 #| fig-height: 6
 
+# aggregate data with the biased participant
 df_agg_with <- df %>%
   filter(TypeTest != "PassiveExposure")   %>%
   dplyr::group_by(GroupType, GroupNum, Shape, Round) %>%
@@ -2158,6 +2067,7 @@ df_agg_with <- df %>%
   dplyr::summarise(All = mean(lev_dist_list),
                    SE_all = se(lev_dist_list))
 
+# aggregate data without the biased participant
 df_agg_without <- df %>%
   filter(TypeTest != "PassiveExposure",
          Producer != "1")   %>%
@@ -2167,6 +2077,7 @@ df_agg_without <- df %>%
   dplyr::summarise(WithoutBiased = mean(lev_dist_list),
                    SE_withoutBiased = se(lev_dist_list))
 
+# merge both datasets
 df_agg <- merge(df_agg_with, df_agg_without, by=c("GroupType", "Round"))
 df_agg_mean <- df_agg %>% dplyr::select(-c(SE_all,SE_withoutBiased))
 df_agg_mean <- gather(df_agg_mean, condition, mean_lev_dist, All:WithoutBiased)
@@ -2177,10 +2088,12 @@ df_agg_se <- df_agg %>%
 df_agg_se <- gather(df_agg_se, condition, se_lev_dist, All:WithoutBiased)
 df_agg <- merge(df_agg_mean, df_agg_se, by=c("GroupType", "Round", "condition"))
 
+# change names
 df_agg <- df_agg %>%
   filter(!(GroupType == "Control" & condition == "WithoutBiased")) %>%
   mutate(TypeGroup = ifelse(GroupType == "Control", "Control", ifelse(condition=="All", "Hetero With Biased", "Hetero Without Biased")))
 
+# plot
 p_converg <- ggplot(df_agg, aes(x=Round, y=mean_lev_dist, color=TypeGroup, group=TypeGroup)) + geom_point()
 p_converg <- add_grey_rect_0_10(p_converg)
 p_converg <- p_converg + geom_point(size=5) +
@@ -2197,14 +2110,17 @@ p_converg
 
 ```
 
+And we observe a model based on this plot, comparing control, hetero with biased, hetero without biased. This refers to the **model 2 bis** of the main paper:
+
 ```{r}
+
+# Same steps as above
 df_agg_with <- df %>%
   filter(TypeTest != "PassiveExposure")   %>%
   dplyr::group_by(GroupType, GroupNum, Shape, Round) %>%
   dplyr::summarise(lev_dist_list = 1 - mean(allpairslev(Word))) %>%
   dplyr::group_by(GroupType, Round, GroupNum) %>%
   dplyr::summarise(All = mean(lev_dist_list))
-
 df_agg_without <- df %>%
   filter(TypeTest != "PassiveExposure",
          Producer != "1")   %>%
@@ -2212,16 +2128,23 @@ df_agg_without <- df %>%
   dplyr::summarise(lev_dist_list = 1 - mean(allpairslev(Word))) %>%
   dplyr::group_by(GroupType, Round, GroupNum) %>%
   dplyr::summarise(WithoutBiased = mean(lev_dist_list))
-
 df_agg <- merge(df_agg_with, df_agg_without, by=c("GroupType", "Round", "GroupNum"))
 df_agg <- gather(df_agg, condition, mean_lev_dist, All:WithoutBiased)
-
 df_agg <- df_agg %>%
   filter(!(GroupType == "Control" & condition == "WithoutBiased")) %>%
   mutate(TypeGroup = ifelse(GroupType == "Control", "Control", ifelse(condition=="All", "Hetero With Biased", "Hetero Without Biased"))) %>%
+    mutate(Round2 = ifelse(Round == 10, 0, ifelse(Round == 9, 1, ifelse(Round==8, 2, ifelse(Round==7, 3, ifelse(Round==6, 4, ifelse(Round==5, 5, ifelse(Round==4, 6, ifelse(Round==3, 7, ifelse(Round==2, 8, ifelse(Round==1, 9, ifelse(Round==0, 10, "NA")))))))))))) %>%
+  mutate(Round2 = as.numeric(Round2)) %>%
   mutate(GroupID = paste(GroupType, GroupNum, sep="_"))
 
-summary(lm(mean_lev_dist ~ TypeGroup*Round, data=df_agg))
+# model
+model <- lm(mean_lev_dist ~ TypeGroup*Round2, data=df_agg)
+summary(model)
+
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
 
 ```
 
@@ -2256,18 +2179,175 @@ summary(lm(mean_lev_dist ~ TypeGroup*Round, data=df_agg))
 
 ```
 
+### Evolution of production similarity
+
+This analysis helps us gain insight into our data. We want to know if participants eventually adopt the initial labels, even if they initially didn't remember them. To find out, we calculate the average Levenshtein distance between participants' productions and the initial labels at each round.
+
+Please note that this measure goes against the biased participant, as even if they remember the initial labels correctly, they may *not* be able to reproduce the exact initial labels.
+
+We look at the evolution of production similarity for each shape:
+
+```{r }
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-evolution-ProducSim
+#| fig-cap: "Evolution of the production similarity at each round, for each shape. Please note that this plot does not include the productions of the biased participant."
+#| fig-width: 10
+#| fig-height: 8
+
+# aggregate data
+df_agg <- df %>%
+  filter(TypeTest != "PassiveExposure") %>%
+  mutate(Shape = as.character(Shape)) %>%
+  dplyr::group_by(GroupType, Round, Shape) %>%
+  dplyr::summarize(mean_lev_dis = mean(ProducSim))
+
+# Plot
+p <- ggplot(df_agg, aes(x=Round, y=mean_lev_dis, color=Shape, group=Shape)) + geom_point()
+p <- add_grey_rect_0_10(p) 
+p <- p + geom_point(size=5) +
+  geom_line(size=1) +
+  facet_grid(GroupType ~ .) +
+  labs(y="Production similarity", fill="Shape") +
+  scale_x_continuous(breaks = c(0:10)) +
+  scale_color_viridis_d()
+p
+```
+
+We observe that **certain shapes are more effectively remembered than others**. For instance, "aike" and "nus" are often well-remembered, while "puak" tends to be frequently forgotten.
+
+This plot also reveals that individuals in the control group often converge on the initial labels in the end, even if they initially forget it. However, in the heterogenous group, this convergence does not occur. Participants' productions tend to become slightly closer to the initial labels, but in the end, the words still remain quite different, **even for words that did not contain a biased letter** (nus and esip)!
+
+We look at the same plot aggregated by group type. Please note that the following plot is biased, because the biased participant could not produce the exact initial labels. Below, you will find a plot that is more suited to compare control and heterogenous groups.
+
+```{r }
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-evolution-ProducSim-agg
+#| fig-cap: "Same plot as above, but aggregated by shape. Please note that this plot does not include the productions of the biased participant"
+#| fig-width: 9
+#| fig-height: 6
+
+# aggregate data
+df_agg <- df %>%
+  filter(TypeTest != "PassiveExposure") %>%
+  dplyr::group_by(GroupType, Round) %>%
+  dplyr::summarize(mean_lev_dis = mean(ProducSim),
+                   se_lev_dis = se(ProducSim))
+
+# Plot
+p <- ggplot(df_agg, aes(x=Round, y=mean_lev_dis, color=GroupType, group=GroupType)) + geom_point()
+p <- add_grey_rect_0_10(p) 
+p <- p + geom_point(size=5) +
+  geom_line(size=1) +
+  labs(y="Production similarity", fill="Shape") +
+  scale_x_continuous(breaks = c(0:10)) +
+  ylim(0.5, 1) +
+  geom_pointrange(aes(ymin=mean_lev_dis-se_lev_dis, ymax=mean_lev_dis+se_lev_dis), lwd=1, size=0.5, alpha=0.8) 
+
+  
+p
+```
+
+Then, we apply a model to compare the two groups, which is refered to as **model 3** in the main paper:
+
+```{r}
+
+# aggregate data
+df_agg <- df %>%
+  filter(TypeTest != "PassiveExposure") %>%
+  dplyr::group_by(GroupType, Round, GroupNum, Producer) %>%
+  dplyr::summarize(mean_lev_dis = mean(ProducSim)) %>%
+  mutate(Round2 = ifelse(Round == 10, 0, ifelse(Round == 9, 1, ifelse(Round==8, 2, ifelse(Round==7, 3, ifelse(Round==6, 4, ifelse(Round==5, 5, ifelse(Round==4, 6, ifelse(Round==3, 7, ifelse(Round==2, 8, ifelse(Round==1, 9, ifelse(Round==0, 10)))))))))))) %>%
+  mutate(GroupID = paste(GroupType, GroupNum, sep="_"))
+
+# model
+model <- lmer(mean_lev_dis ~ GroupType*Round2 + (1 | GroupID), data=df_agg)
+summary(model)
+
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
+```
+
+Now, we split heterogenous condition in two: participants in heterogenous groups in pairs with (*hetero_biased*) and without (*hetero_unbiased*) the biased participant, similarly with previous plots. Is is a better measure since the data from the biased participant is artificially biased.
+
+```{r }
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-evolution-ProducSim-distinct
+#| fig-cap: "Same plot as above, except that here, we differentiate between pairs interacting with the biased individuals, and pairs interacting without the biased individual."
+#| fig-width: 6
+#| fig-height: 6
+
+# aggregate data
+df_agg <- df %>%
+  filter(TypeTest == "ComGame") %>%
+  mutate(Condition = ifelse(GroupType == "Control", "Control", ifelse(Producer=="1", "Hetero With Biased", "Hetero Without Biased"))) %>%
+  dplyr::group_by(GroupType, Round, Condition) %>%
+  dplyr::summarize(mean_lev_dis = mean(ProducSim),
+                   se_lev_dis = se(ProducSim))
+
+
+# Plot
+p_distlabel <- ggplot(df_agg, aes(x=Round, y=mean_lev_dis, color=Condition, group=Condition)) + geom_point()
+p_distlabel <- add_grey_rect_1_9(p_distlabel) 
+p_distlabel <- p_distlabel + geom_point(size=5) +
+  geom_line(size=1) +
+  labs(y="Production similarity", fill="", color="") +
+  scale_x_continuous(breaks = c(1:9)) +
+  theme(legend.position="bottom") +
+  ylim(0.3,1) +
+  geom_pointrange(aes(ymin=mean_lev_dis-se_lev_dis, ymax=mean_lev_dis+se_lev_dis), lwd=1, size=0.5) +
+  scale_color_viridis_d(end=0.8) 
+
+p_distlabel
+```
+
+We can see that as expected, due to our measure of production similarity, the performance of the biased participant was dragging the whole group to lower similarity. However, we still can find differences between the control groups and the heterogenous groups containing only unbiased participants.
+
+Let's see if this difference is significant (**model 3 bis** in the main paper):
+
+```{r}
+# aggregate data
+df_agg <- df %>%
+  filter(TypeTest == "ComGame") %>%
+  mutate(Condition = ifelse(GroupType == "Control", "Control", ifelse(Producer=="1", "Hetero With Biased", "Hetero Without Biased")), Shape = as.character(Shape)) %>%
+  dplyr::group_by(GroupType, Round, Condition, GroupNum) %>%
+  dplyr::summarize(mean_lev_dis = mean(ProducSim))  %>%
+  mutate(Round2 = ifelse(Round == 10, 0, ifelse(Round == 9, 1, ifelse(Round==8, 2, ifelse(Round==7, 3, ifelse(Round==6, 4, ifelse(Round==5, 5, ifelse(Round==4, 6, ifelse(Round==3, 7, ifelse(Round==2, 8, ifelse(Round==1, 9, ifelse(Round==0, 10)))))))))))) %>%
+  mutate(GroupID = paste(GroupType, GroupNum, sep="_"))
+
+# model
+model <- lmer(mean_lev_dis ~ Condition*Round2 + (1 | GroupID), data=df_agg)
+summary(model)
+
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
+```
+
 ### Stability
 
-Stability is a measure of the levenstein distances between all pairs of words from rounds n and n-1
+Stability is a measure of the levenstein distances between all pairs of words from rounds n and n-1.
 
 First, we look at the **evolution of stability for each shape**.
 
-To better understand how the function works, let's take an example for the shape *kesip*:
+To better understand how the function works, let's take an example for the shape *kesip* for one group:
 
--   At round 7 participants produced *puise*, *kesip*, *esip*, *epi*
--   At round 8 participants produced *puie*, *suki*, *kesip*, *kesip*
+-   At round 7, participants produced *puise*, *kesip*, *esip*, *epi*
+-   At round 8, participants produced *puie*, *suki*, *kesip*, *kesip*
 
-Stability is computed by computing the levenshtein distance between all pairs of words (*puise* and *puie*, then *puise* and *suki*, and so on). In this case stability between round 7 and 8 for the shape *kesip* is equal to 0.59.
+Stability is computed by computing the levenshtein distance between all pairs of words (*puise* and *puie*, then *puise* and *suki*, and so on...). In this case stability between round 7 and 8 for the shape *kesip* is equal to 0.59.
+
+Since this value assumes that the data is computed between rounds n and n-1, it is normal that the plots shows the value for stability only from round 1 to round 10.
 
 ```{r}
 #| echo: false
@@ -2295,7 +2375,7 @@ df_agg <- df %>%
   filter(Round != 0) %>%
   dplyr::group_by(Round, GroupType, Shape) %>%
   dplyr::summarize(stab = mean(Stab))
-
+  
 
 p <- ggplot(df_agg, aes(x=Round, y=stab, color=Shape, group=Shape)) + geom_point()
 p <- add_grey_rect_0_10(p)
@@ -2375,7 +2455,7 @@ p
 
 ```
 
-We look at the same type of data, except that it is aggregated by shape.
+We look at the same type of data, except that it is aggregated by group type, similarly as what was performed before.
 
 ```{r}
 #| echo: false
@@ -2386,35 +2466,46 @@ We look at the same type of data, except that it is aggregated by shape.
 #| fig-width: 10
 #| fig-height: 8
 
-# # compute stability
-# for ( gr in unique(df$GroupID)){
-#   for ( myr in c(1:10)){
-#     for( mys in unique(df$Shape)){
-#       list1 <- df$Word[df$GroupID == gr & df$Round == myr & df$Shape == mys]
-#       list2 <- df$Word[df$GroupID == gr & df$Round == myr-1 & df$Shape == mys]
-#       stab <- mean(allpairslev_rounds(c(list1, list2), length(list1)), na.rm=TRUE)
-#       df$Stab[df$GroupID == gr & df$Round == myr & df$Shape == mys] <- 1 - stab
-#     }
-#   }
-# }
-# 
-# # aggregate (it is not very important here because the value is same for each)
-# df_agg <- df %>%
-#   filter(Round != 0) %>%
-#   dplyr::group_by(Round, GroupType, GroupNum) %>%
-#   dplyr::summarize(stab = mean(Stab))
-# 
-# p <- ggplot(df_agg, aes(x=Round, y=stab, color=GroupNum, group=GroupNum)) + geom_point()
-# p <- add_grey_rect_0_10(p)
-# p <- p + geom_point(size=5) +
-#   geom_line(size=1) +
-#   geom_smooth() +
-#   scale_x_continuous(breaks = c(0:10))+
-#   facet_grid(GroupType ~ .) +
-#   labs(color="GroupNum", y="Stability") +
-#   ylim(0,1) +
-#   scale_color_viridis_d()
-# p
+# compute stability
+for ( gr in unique(df$GroupID)){
+  for ( myr in c(1:10)){
+    for( mys in unique(df$Shape)){
+      list1 <- df$Word[df$GroupID == gr & df$Round == myr & df$Shape == mys]
+      list2 <- df$Word[df$GroupID == gr & df$Round == myr-1 & df$Shape == mys]
+      stab <- mean(allpairslev_rounds(c(list1, list2), length(list1)), na.rm=TRUE)
+      df$Stab[df$GroupID == gr & df$Round == myr & df$Shape == mys] <- 1 - stab
+    }
+  }
+}
+
+# aggregate (it is not very important here because the value is same for each)
+df_agg <- df %>%
+  filter(Round != 0) %>%
+  dplyr::group_by(Round, GroupType) %>%
+  dplyr::summarize(stab = mean(Stab),
+                   se_stab = se(Stab)) 
+
+# Plot
+p <- ggplot(df_agg, aes(x=Round, y=stab, color=GroupType, group=GroupType)) + geom_point()
+p <- add_grey_rect_0_10(p)
+p <- p + geom_point(size=5) +
+  geom_line(size=1) +
+  scale_x_continuous(breaks = c(0:10))+
+  labs(color="Group Type", y="Stability") +
+  ylim(0,1) +
+  geom_pointrange(data=df_agg, aes(ymin=stab-se_stab, ymax=stab+se_stab), lwd=1, size=0.5, alpha=0.8) 
+p
+
+# Perform model
+df_agg <- df %>%
+  filter(Round != 0) %>%
+  dplyr::group_by(Round, GroupType, GroupNum) %>%
+  dplyr::summarize(stab = mean(Stab)) %>%
+  mutate(Round2 = ifelse(Round == 10, 0, ifelse(Round == 9, 1, ifelse(Round==8, 2, ifelse(Round==7, 3, ifelse(Round==6, 4, ifelse(Round==5, 5, ifelse(Round==4, 6, ifelse(Round==3, 7, ifelse(Round==2, 8, ifelse(Round==1, 9, ifelse(Round==0, 10, "NA")))))))))))) %>%
+  mutate(Round2 = as.numeric(Round2)) %>%
+  mutate(GroupID = paste(GroupType, GroupNum, sep="_"))
+
+summary(lmer(stab ~ GroupType*Round2 + (1 | GroupID), data=df_agg))
 
 ```
 
@@ -2489,11 +2580,80 @@ p
 
 ```
 
+And a model:
+
+```{r}
+
+
+### compute stability for groups with biased
+for ( gr in unique(df$GroupID)){
+  for ( myr in c(1:10)){
+    for( mys in unique(df$Shape)){
+      list1 <- df$Word[df$GroupID == gr & df$Round == myr & df$Shape == mys]
+      list2 <- df$Word[df$GroupID == gr & df$Round == myr-1 & df$Shape == mys]
+      stab <- mean(allpairslev_rounds(c(list1, list2), length(list1)), na.rm=TRUE)
+      df$Stab[df$GroupID == gr & df$Round == myr & df$Shape == mys] <- 1 - stab
+    }
+  }
+}
+
+# aggregate 
+df_agg_with <- df %>%
+  filter(Round != 0) %>%
+  dplyr::group_by(Round, GroupType, GroupNum) %>%
+  dplyr::summarize(All = mean(Stab))
+
+### compute stability for groups without biased
+df2 <- df %>%
+  filter(Producer != 1)
+
+for ( gr in unique(df2$GroupID)){
+  for ( myr in c(1:10)){
+    for( mys in unique(df2$Shape)){
+      list1 <- df2$Word[df2$GroupID == gr & df2$Round == myr & df2$Shape == mys]
+      list2 <- df2$Word[df2$GroupID == gr & df2$Round == myr-1 & df2$Shape == mys]
+      stab <- mean(allpairslev_rounds(c(list1, list2), length(list1)), na.rm=TRUE)
+      df2$Stab[df2$GroupID == gr & df2$Round == myr & df2$Shape == mys] <- 1 - stab
+    }
+  }
+}
+
+# aggregate 
+df_agg_without <- df2 %>%
+  filter(Round != 0) %>%
+  dplyr::group_by(Round, GroupType, GroupNum) %>%
+  dplyr::summarize(WithoutBiased = mean(Stab))
+
+
+## merge
+df_agg <- merge(df_agg_with, df_agg_without, by=c("Round", "GroupType", "GroupNum"))
+df_agg <- gather(df_agg, condition, Stab, All:WithoutBiased)
+
+df_agg <- df_agg %>%
+  filter(!(GroupType == "Control" & condition == "WithoutBiased")) %>%
+  mutate(TypeGroup = ifelse(GroupType == "Control", "Control", ifelse(condition=="All", "Hetero_All", "Hetero_Unbiased"))) %>%
+  mutate(Round2 = ifelse(Round == 10, 0, ifelse(Round == 9, 1, ifelse(Round==8, 2, ifelse(Round==7, 3, ifelse(Round==6, 4, ifelse(Round==5, 5, ifelse(Round==4, 6, ifelse(Round==3, 7, ifelse(Round==2, 8, ifelse(Round==1, 9, ifelse(Round==0, 10, "NA")))))))))))) %>%
+  mutate(Round2 = as.numeric(Round2)) %>%
+  mutate(GroupID = paste(GroupType, GroupNum, sep="_"))
+
+# model
+model <- summary(lmer(Stab ~ TypeGroup*Round2 + (1 | GroupID), data=df_agg))
+summary(model)
+
+# print diagnostic plots
+#plots <- plot_model(model, type = "diag", show.ci = FALSE)
+#plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+#ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
+```
+
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-# 
+
+
+# ENTROPY
 # df %>%
 #   filter(TypeTest == "testing_set" | TypeTest == "final_testing") %>%
 #   mutate(PartID = as.factor(PartID),
@@ -2550,6 +2710,21 @@ p
 
 ## 2 - Group-adaptation to the biased participants
 
+In this part, we will look at a set of different models.
+
+First, we will gather the data by group (of course, excluding the production from the biased participant in the heterogenous group). It leads to beautiful and interpretable plots (the ones printed in the main paper). However, we loose some information by averaging the data. In these models, we have only the Group ID as the random factor. Then, we will look at the data for each individuals. The plots are harder to read, but the statistics are more accurate. In the models, we look at the random effects of participants nested within group ID. For each type of data aggregation, we look both at the evolution of the frequency of biased letters across rounds (including round 0 and 10, which are the testing before and after the communication game), and we also make a special focus on the testing moment (first versus last). We tried to add the round or the moment of testing as random slopes, but it led the models not to converge.
+
+To summarize our models, here is what we used:
+
+| Type aggregation | Fixed effect 1 | Fixed effect 2  | Random effects | Plot   | Model        |
+|------------|----------------|-----------------|------------------------|---------------------------|--------------------------------|
+| Group      | Round          | Group Type      | Group ID               | **Figure 2A**             | model 4a.                      |
+| Group      | Testing moment | Group Type      | Group ID               | **Figure 2B**             | model 4b                       |
+| Individual | Round          | Group Type      | Group ID / part_ID     | not in the main paper     | **model 4, in the main paper** |
+| Individual | Testing moment | Group Type      | Group ID / part_ID | not in the main paper | model 4c                       |
+
+
+
 ### Per group
 
 #### For all rounds
@@ -2586,14 +2761,14 @@ In all the following plots, we will represent these initial frequencies with a b
 #| message: false
 #| warning: false 
 #| label: fig-freq-round-all
-#| fig-cap: "Plot showing the evolution of frequency of both biased letters (red) and unbiased letters (blue). Each line represent a group, and the thick line shows the linear regression applied to all these groups."
+#| fig-cap: "Plot showing the evolution of frequency of biased letters in control groups (red) and heterogenous groups (blue). Each line represent a group, and the thick line shows the linear regression applied to all these groups."
 #| fig-width: 9
 #| fig-height: 7
 
 # compute frequency (only biased letters)
 df_agg <- df %>%
   filter(TypeTest != "PassiveExposure",
-         Producer != "1") %>%
+         !(Producer == "1" & GroupType == "Hetero")) %>%
   dplyr::group_by(GroupType, GroupNum, Round) %>% 
   dplyr::summarise(Words = paste(Word, collapse = "")) %>%
   mutate(biased_count = str_count(Words, "k") + str_count(Words, "a"),
@@ -2621,49 +2796,65 @@ p_round
 
 ```
 
+Out of curiosity, let's observe if we plot the same plot with a loess function instead of a linear one:
+
+```{r}
+
+# plot
+p_round <- ggplot(df_agg, aes(x=Round, y=Freq, color=GroupType, group = interaction(GroupNum, GroupType)))+ geom_point()
+p_round <- add_grey_rect_0_10(p_round)
+p_round <- p_round + 
+  geom_hline(yintercept = init_freq_biased, linetype = "dashed") +
+  geom_point(alpha=0.5, size=1)+
+  geom_line(alpha=0.5)+
+  geom_smooth(method="loess", data=df_agg, aes(x=Round, y=Freq, color=GroupType, group = GroupType)) +
+  labs(y="Mean freq of biased letters (%)", fill="Group") +
+  #facet_grid(GroupType ~ .) +
+  scale_x_continuous(breaks = c(0:10)) +
+  theme(axis.title.y = element_text(size = 17))
+
+p_round
+```
+
+
 Let's use a linear model to study if there is an effect of time and group type on the frequency of biased and unbiased letters.
+The model include testing sessions (round 0 to 10), and is refered as **model 4a**:
 
-We ran two types of models: one where we include the testing sessions (as Round 0 and Round 10), and one where we only look at the communication games. For both types of model, we run a model with Round as random slopes, and one simpler model only controlling for the random effect of group ID.
-
-We use models including testing sessions (round 0 to 10):
+(Please note that adding round or round type as random slopes causes the model not to converge; uncomment the part below to see the output.)
 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false 
 
-# model with random slopes
-model <- lmer(Freq ~ Round2 * GroupType + (1 + RoundType | GroupID), data=df_agg, control=lmerControl(optimizer="bobyqa"))
-summary(model)
-```
+### THESE MODELS DO NOT CONVERGE
 
-The model with round as a random slope does not converge. We can also control for the type of round: round 1, 3, and 6 involves the same types of pairs, as well as rounds 2, 4, and 7 and rounds 3,6,9.
+## model with random slopes for ROUND
+#model <- lmer(Freq ~ Round2 * GroupType + (1 + RoundType | GroupID), data=df_agg, control=lmerControl(optimizer="bobyqa"))
+#summary(model)
 
-```{r}
-# model without random slopes
-model <- lmer(Freq ~ Round2 * GroupType + (1 + RoundType | GroupID), data=df_agg, control=lmerControl(optimizer="bobyqa"))
-summary(model)
+## model with random slopes for ROUNDTYPE
+#model <- lmer(Freq ~ Round2 * GroupType + (1 + Round2 | GroupID), data=df_agg, control=lmerControl(optimizer="bobyqa"))
+#summary(model)
 
-```
-
-This model also does not converge.
-
-Thus, we look only at a model which have group ID as a random factor.
-
-```{r}
 # model without random slopes
 model <- lmer(Freq ~ Round2 * GroupType + (1 | GroupID), data=df_agg)
 summary(model)
 
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
 ```
 
-The plot and model suggests:
+The plot and model suggest:
 
--   There are more variation in heterogenous groups compared to control groups
+-   There is more variation in heterogenous groups compared to control groups
 
--   In control groups, the proportion of biased and unbiased letters remain similar to the initial frequency of these letters
+-   In control groups, the proportion of biased and unbiased letters remains similar to the initial frequency of these letters
 
--   In heterogenous groups, the proportion of unbiased letters slightly increase with time, while the proportion of biased letters slightly decrease with time.
+-   In heterogenous groups, the proportion of unbiased letters slightly increases with time, while the proportion of biased letters slightly decreases with time.
 
 Let's look at the same plot, but using aggregated values for all groups:
 
@@ -2679,7 +2870,7 @@ Let's look at the same plot, but using aggregated values for all groups:
 
 df_agg <- df %>%
   filter(TypeTest != "PassiveExposure",
-         Producer != "1") %>%
+         !(Producer == "1" & GroupType == "Hetero")) %>%
   dplyr::group_by(GroupType, Round) %>%
   dplyr::summarise(Words = paste(Word, collapse = "")) %>%
   mutate(biased_count = str_count(Words, "k") + str_count(Words, "a"),
@@ -2696,10 +2887,11 @@ p <- p +  geom_hline(yintercept = init_freq_biased, linetype = "dashed") +
   scale_x_continuous(breaks = c(0:10)) 
 p
 ```
+Interestingly, the frequency of biased letters dropped at round 3 in heterogenous groups. It could be due to the fact that unbiased participants have been paired with the biased participant successively in round 1 and 2, and thus have both in mind the vocabulary with less biased letters. 
 
 #### For Testing
 
-The previous plot focused on the evolution of the frequency of biased and unbiased letters across all rounds (0 to 10). Now, we will focus solely on the **Round 0 and the Round 10**, namely, the initial (*FirstTest*, after the passive exposure) and the final testing (*LastTest*, after the communication game).
+The previous plot focused on the evolution of the frequency of biased and unbiased letters across all rounds (0 to 10). Now, we will focus solely on **Round 0 and Round 10**, namely, the initial (*FirstTest*, after the passive exposure) and the final testing (*LastTest*, after the communication game). Here too, we remove the data from the biased participant in the heterogenous groups.
 
 ```{r}
 #| echo: false
@@ -2713,7 +2905,7 @@ The previous plot focused on the evolution of the frequency of biased and unbias
 # compute frequency (only biased letters)
 df_agg <- df %>%
   filter(TypeTest=="FirstTesting" | TypeTest=="SecondTesting",
-         Producer != "1") %>%
+         !(Producer == "1" & GroupType == "Hetero")) %>%
   dplyr::group_by(GroupType, GroupNum, Round, TypeTest) %>% 
   dplyr::summarise(Words = paste(Word, collapse = "")) %>%
   mutate(biased_count = str_count(Words, "k") + str_count(Words, "a"),
@@ -2738,12 +2930,13 @@ p_test <- ggplot(df_agg, aes(x=TypeTest, y=Freq, fill=GroupType))+
   geom_boxplot(color="black", alpha=0.4,position= position_dodge(), width=0.3)+
   theme_bw(base_size=20) +
   geom_line(data=df_agg, aes(x=TypeTest, y=Freq, group=GroupNum), color="grey")+
-  labs(x="", y="Mean frequency of biased letters") +
+  labs(x="", y="Mean freq of biased letters (%)") +
   facet_grid(. ~ GroupType) +
   guides(fill=FALSE, color=FALSE)
 
 p_test
 ```
+We compute the model, which is refered as **model 4b** (see [2 - Group-adaptation to the biased participants]) for more information.
 
 ```{r}
 #| echo: false
@@ -2759,9 +2952,16 @@ p_test
 # without random slopes
 mod <- lmer(Freq ~ TypeTest * GroupType + (1 | GroupID), data=df_agg)
 summary(mod)
-```
 
-##### Boostrapping
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
+```
+This is not significant, but it could be due to the low number of groups. Thus, we also perform bootstrapping.
+
+##### Boostrapping (Frequency of biased letters)
 
 Bootstrapping is a resampling technique used in statistics to estimate the uncertainty associated with a sample statistic. It involves repeatedly drawing random samples with replacement from the original data set. By creating multiple bootstrap samples, the method allows for the estimation of sampling variability, constructing confidence intervals, and assessing the statistical significance of results. Bootstrapping is particularly useful when the sample size is small or when the underlying data distribution is unknown or non-normal, as it provides a robust and flexible approach for inference.
 
@@ -2823,9 +3023,12 @@ plot(lmer_par_boot)
 
 ```
 
+When observing the lower and upper bound for the ineraction between GroupType and TypeTest, we found that this confidence interval never includes zero. It is hinting at the possible significance of the data if we have had more groups.
+
+
 ##### How to explain Group 2 and Group 6 performance?
 
-@fig-freq-testing2 also highlights two groups within the heterogenous group (**Group 2 and Group 6**) that deviate from this pattern. Our hypothesis is that these groups did not adapt to the biased participant because their participants remembered too well the initial labels, causing them to stick with those words. To further investigate, let's examine the accuracy of the initial learning phase for all groups:
+@fig-freq-testing2 also highlights that two groups within the heterogenous condition (**Group 2 and Group 6**) deviate from this pattern. Our hypothesis is that these groups did not adapt to the biased participant because their participants remembered too well the initial labels, causing them to stick by those words. To further investigate, let's examine the accuracy of the initial learning phase for all groups:
 
 ```{r }
 #| echo: false
@@ -2860,7 +3063,7 @@ df_agg <- df %>%
   filter(TypeTest == "FirstTesting", GroupType == "Hetero") %>%
   mutate(Shape = as.character(Shape)) %>%
   dplyr::group_by(Producer, GroupNum, GroupType) %>%
-  dplyr::summarize(mean_lev_dis = mean(DistInitLabel2)) %>%
+  dplyr::summarize(mean_lev_dis = mean(ProducSim)) %>%
   mutate(Producer = as.character(Producer)) %>%
   mutate(Producer = ifelse(Producer == "1", "1 (biased)",Producer))
 
@@ -2951,7 +3154,7 @@ After communicating labels:
 kable(last_name)
 ```
 
-In order to look more at the relation between learning accuracy and adaptability, please refer to the part \[3 - Adaptability\] and subpart [What do predict adaptation?]
+In order to look more precisely at the relation between learning accuracy and adaptability, please refer to part \[3 - Adaptability\] and subpart [What do predict adaptation?]
 
 ```{r}
 #| echo: false
@@ -3034,13 +3237,13 @@ In order to look more at the relation between learning accuracy and adaptability
 
 ```
 
-Now, we look at the evolution of the production similarity with the initial labels with time with a specific focus on these two groups:
+Now, we look at the evolution of the production similarity with the initial labels with time with a focus on these two groups:
 
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
-#| label: fig-evolution-distinitwords_group
+#| label: fig-evolution-ProducSim_group
 #| fig-cap: "Evolution of the production similarity at each round and for each group. Please note that this plot does not include the productions of the biased participant."
 #| fig-width: 8
 #| fig-height: 6
@@ -3051,7 +3254,7 @@ df_agg <- df %>%
   filter(GroupType == "Hetero") %>%
   mutate(GroupNum = as.character(GroupNum)) %>%
   dplyr::group_by(GroupType, Round, GroupNum) %>%
-  dplyr::summarize(mean_lev_dis = mean(DistInitLabel2)) %>%
+  dplyr::summarize(mean_lev_dis = mean(ProducSim)) %>%
   mutate(colorr = ifelse(GroupNum == 2, "Group2", ifelse(GroupNum==6, "Group6", "Other"))) %>%
   mutate(alphaa = ifelse(colorr=="Other", "high", "low"))
 
@@ -3061,7 +3264,7 @@ p <- add_grey_rect_0_10(p)
 p <- p + geom_point(size=5) +
   geom_line(size=1) +
   facet_grid(GroupType ~ .) +
-  labs(y="Production similarity", fill="Shape") +
+  labs(y="Production similarity", fill="Shape", color="Group") +
   scale_x_continuous(breaks = c(0:10)) +
   scale_color_viridis_d(end=0.8) +
   scale_alpha_manual(values=c(0.4, 0.8)) +
@@ -3070,27 +3273,29 @@ p
 
 ```
 
-This plot helps understand the non adaptability of group 2 - participants of this group converged on the initial labels. However, we do not know more about the performance of Group 6.
+This plot helps understand the non adaptability of Group 2 - participants of this group converged on the initial labels. However, no clear explanation emerges about the performance reached by Group 6.
 
 ### Per individual
 
 #### For all rounds
 
-This is the same plot as before, except that we plot here the results for each participant.
+This is the same plot as before, except that we plot here the results for each participant. See the part [2 - Group-adaptation to the biased participants] for more information. 
+
+Please note that while we did not printed this plot in the main paper, the model associated to this plot is the one we put in the main paper.
 
 ```{r }
 #| echo: false
 #| message: false
 #| warning: false 
 #| label: fig-freq-round-indiv-all
-#| fig-cap: "Plot showing the evolution of frequency of both biased letters (red) and unbiased letters (blue). Each line represent a group, and the thick line shows the linear regression applied to all these groups."
+#| fig-cap: "Plot showing the evolution of frequency of biased letters in control groups (red) and heterogenous groups (blue). Each line represent a group, and the thick line shows the linear regression applied to all these groups."
 #| fig-width: 10
 #| fig-height: 8
 
 # compute frequency (only biased letters)
 df_agg <- df %>%
   filter(TypeTest != "PassiveExposure",
-         Producer != "1") %>%
+         !(Producer == "1" & GroupType == "Hetero")) %>%
   dplyr::group_by(GroupType, GroupNum, Round, Producer) %>% 
   dplyr::summarise(Words = paste(Word, collapse = "")) %>%
   mutate(biased_count = str_count(Words, "k") + str_count(Words, "a"),
@@ -3115,46 +3320,59 @@ p <- p +
   scale_x_continuous(breaks = c(0:10))
 p
 
-```
+# with loess function
+p <- ggplot(df_agg, aes(x=Round, y=Freq, color=GroupType, group = PartID_unique))+ geom_point()
+p <- add_grey_rect_0_10(p)
+p <- p + 
+  geom_hline(yintercept = init_freq_biased, linetype = "dashed") +
+  geom_point(alpha=0.5, size=1)+
+  geom_line(alpha=0.5)+
+  geom_smooth(method="loess", data=df_agg, aes(x=Round, y=Freq, color=GroupType, group = GroupType)) +
+  labs(y="Mean Freq of biased letters (%)", fill="Group") +
+  #facet_grid(GroupType ~ .) +
+  scale_x_continuous(breaks = c(0:10))
+p
 
-The model failed to converge when including Round as a random slope.
-
-```{r}
-
-# with random slopes
-model <- lmer(Freq ~ Round2 * GroupType + (1 + Round2 | GroupID / PartID_unique) , data =  df_agg, control=lmerControl(optimizer="bobyqa"))
-summary(model)
-```
-
-Instead, we can control for the type of pairs in which participants are talking:
-
-```{r}
-
-df_agg$pairs <- ifelse( ((df_agg$Round == 1 | df_agg$Round == 4 | df_agg$Round == 7) & df_agg$Producer == 2), "1_2", 
-                        ifelse(((df_agg$Round == 1 | df_agg$Round == 4 | df_agg$Round == 7) & df_agg$Producer != 2), "3_4", 
-                               ifelse(((df_agg$Round == 2 | df_agg$Round == 5 | df_agg$Round == 8) & df_agg$Producer == 3), "1_3", 
-                                      ifelse(((df_agg$Round == 2 | df_agg$Round == 5 | df_agg$Round == 8) & df_agg$Producer != 3), "2_4", 
-                                            ifelse(((df_agg$Round == 3 | df_agg$Round == 6 | df_agg$Round == 9) & df_agg$Producer == 4), "1_4", 
-                                                ifelse(((df_agg$Round == 3 | df_agg$Round == 6 | df_agg$Round == 9) & df_agg$Producer != 4), "2_3", "None"))))))
-
-# without random slopes
-model <- lmer(Freq ~ Round2 * GroupType + (1 + pairs | GroupID / PartID_unique), data = df_agg)
-summary(model)
 
 ```
 
-This model does not converge either. Thus, we keep only the model with Participant ID and group ID as random factors.
+Let's look at the model, included in the main paper and refered to as **model 4**. Please note that this model include testing sessions (round 0 to 10).
+
+(Please note that adding round or round type as random slopes causes the model not to converge; uncomment the part below to see the output.)
 
 ```{r}
 
-# with random slopes
+### THESE MODELS DO NOT CONVERGE
+
+## model with random slopes for ROUND
+#model <- lmer(Freq ~ Round2 * GroupType + (1 + Round2 | GroupID / PartID_unique) , data =  df_agg, control=lmerControl(optimizer="bobyqa"))
+#summary(model)
+
+## model with random slopes for PAIRS TYPE
+# df_agg$pairs <- ifelse( ((df_agg$Round == 1 | df_agg$Round == 4 | df_agg$Round == 7) & df_agg$Producer == 2), "1_2", 
+#                         ifelse(((df_agg$Round == 1 | df_agg$Round == 4 | df_agg$Round == 7) & df_agg$Producer != 2), "3_4", 
+#                                ifelse(((df_agg$Round == 2 | df_agg$Round == 5 | df_agg$Round == 8) & df_agg$Producer == 3), "1_3", 
+#                                       ifelse(((df_agg$Round == 2 | df_agg$Round == 5 | df_agg$Round == 8) & df_agg$Producer != 3), "2_4", 
+#                                             ifelse(((df_agg$Round == 3 | df_agg$Round == 6 | df_agg$Round == 9) & df_agg$Producer == 4), "1_4", 
+#                                                 ifelse(((df_agg$Round == 3 | df_agg$Round == 6 | df_agg$Round == 9) & df_agg$Producer != 4), "2_3", "None"))))))
+# model <- lmer(Freq ~ Round2 * GroupType + (1 + pairs | GroupID / PartID_unique), data = df_agg)
+# summary(model)
+
+
+# model without random slopes
 model <- lmer(Freq ~ Round2 * GroupType + (1 | GroupID / PartID_unique), data =  df_agg)
 summary(model)
+
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
 ```
 
 #### For Testing
 
-This plot is the same as before, except that we plot here the output for each participant.
+This plot is the same as in figure 18, except that we plot here the output for each participant.
 
 ```{r}
 #| echo: false
@@ -3195,6 +3413,7 @@ ggplot(df_freq, aes(x=TypeTest, y=Freq, fill=GroupType)) +
   labs(y="Mean Freq of biased letters (%)")
 
 ```
+This model is refered as **model 4c**:
 
 ```{r}
 #| echo: false
@@ -3204,6 +3423,12 @@ ggplot(df_freq, aes(x=TypeTest, y=Freq, fill=GroupType)) +
 # without random slopes
 model <- lmer(Freq ~ TypeTest * GroupType + (1 | GroupID / PartID_unique) , data = df_freq)
 summary(model)
+
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
 
 # with random slopes: does not work
 #model <- lmer(Freq ~ TypeTest * GroupType + (1 + TypeTest | GroupID / PartID_unique) , data = df_freq)
@@ -3297,7 +3522,7 @@ summary(model)
 
 ```
 
-Using violin plots and stadnard errors
+Using violin plots and standard errors
 
 ```{r}
 #| echo: false
@@ -3311,7 +3536,7 @@ Using violin plots and stadnard errors
 # 1 - compute frequency for last three rounds
 df_agg1 <- df %>%
   filter(TypeTest != "PassiveExposure",
-         Producer != "1") %>%
+         !(Producer == "1" & GroupType == "Hetero")) %>%
   filter(Round == 7 | Round == 8 | Round==9) %>%
   mutate(Moment = ifelse(GroupType == "Control", "Control", ifelse(Round==9 & Producer==4, "Biased", ifelse(Round==8 & Producer==3, "Biased", ifelse(Round==7 & Producer==2, "Biased", ifelse(Round==8 & Producer==4, "Unbiased", ifelse(Round==9 & (Producer==2 | Producer==3), "Unbiased", NA))))))) %>%
   filter(is.na(Moment)==FALSE) %>%
@@ -3325,7 +3550,7 @@ df_agg1 <- df %>%
 # 2 - compute frequency for first and last
 df_agg3 <- df %>%
   filter(TypeTest != "PassiveExposure",
-         Producer != "1") %>%
+         !(Producer == "1" & GroupType == "Hetero")) %>%
   filter(Round == 0 | Round == 10) %>%
   mutate(Moment = ifelse(Round == 0, "First Test", ifelse(Round==10, "Last Test", "NA"))) %>%
   filter(is.na(Moment)==FALSE) %>%
@@ -3415,7 +3640,7 @@ ggarrange(p1, p2, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 
 ## 3 - Pair-level adaptation to the biased participant
 
-We focus here on the pair-level: we compare the productions of the participants in the pair excluding the biased participants (pair between 2 - 3, 3 - 4, and 2 - 4), to the production used by pairs involving the biased participant (pair with 1 - 2, 1 - 3, and 1 - 4). Important note: the length of input between pair without and with the biased participant do not have the same length, as we do not look at the productions of Participant 1. For example, in Round 1, we compare the output of:
+We focus here on the pair-level: we compare the productions of the participants in the pair excluding the biased participants (pair 2 - 3, 3 - 4, and 2 - 4) to the production used by pairs involving the biased participant (pair 1 - 2, 1 - 3, and 1 - 4). Important note: the numbers of words considered when omparing between pair without and with the biased participant differ, as we do not consider the productions of Participant 1. For example, in Round 1, we compare the output of:
 
 -   Pair without the biased participant (*Hetero_unbiased*): production of participant 3 and participant 4 -\> **16 words in total**
 
@@ -3483,7 +3708,7 @@ We focus here on the pair-level: we compare the productions of the participants 
 # compute frequency
 df_agg <- df %>%
   filter(TypeTest == "ComGame",
-         Producer != "1") %>%
+         !(Producer == "1" & GroupType == "Hetero")) %>%
   mutate(type = ifelse(GroupType == "Control", "Control", ifelse(grepl( "1", pair, fixed = TRUE), "Hetero_Biased", "Hetero_Unbiased"))) %>%
   dplyr::group_by(type, Round) %>% 
   dplyr::summarise(Words = paste(Word, collapse = "")) %>%
@@ -3511,9 +3736,9 @@ p
 
 ```
 
-A very interesting observation appear: in Round 3, pairs with unbiased individuals use very few biased letters! This can be explained by the fact that these two unbiased participants have been paired with the biased participant in the rounds just before.
+An interesting observation appears: in Round 3, pairs with unbiased individuals use less biased letters than the unbiased participants involved in the preceding rounds! One hypothesis is that these two unbiased participants have been paired with the biased participant in the preceding rounds and already start to adjust to them.
 
-We merge these results per round, to have a look at the global picture:
+We merge these results over the rounds, to have a look at the global picture:
 
 ```{r}
 #| echo: false
@@ -3607,6 +3832,8 @@ ggplot(df_agg2, aes(x=TalkToBiased, y=Freq))+
 
 We build two models: one in which the group type is a fixed effect (but please note that this introduces a bias, since in control groups, there is no "talk to bias" or "talk to unbias" - instead, it reflects whether participants 2, 3, and 4 talk to participant1 or not).
 
+This is **not** the model 5 refered in the main paper, since we also have here the control groups:
+
 ```{r }
 
 # # compute frequency
@@ -3628,9 +3855,16 @@ df_agg <- df %>%
 model <- lmer(Freq ~ GroupType * TalkToBiased + (1 | GroupID / PartID_unique), data=df_agg)
 summary(model)
 
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
+
 ```
 
-Then, we also look only at heterogenous groups:
+Then, we also look only at heterogeneous groups. This is the **model 5** refered in the main paper:
+
 
 ```{r }
 
@@ -3653,6 +3887,12 @@ df_agg <- df %>%
 # model
 model <- lmer(Freq ~ TalkToBiased + (1 | GroupID / PartID_unique), data=df_agg)
 summary(model)
+
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
 
 ```
 
@@ -3714,7 +3954,7 @@ summary(model)
 # summary(model)
 ```
 
-We create an index for each participant: the difference in frequency of letter when this participant is talking to the Biased compared to when talking to the other. A high value in "yes" mean that the participant uses way less (biased or unbiased) letters when talking to the biased participant.
+
 
 ```{r}
 #| echo: false
@@ -3725,6 +3965,8 @@ We create an index for each participant: the difference in frequency of letter w
 #| fig-width: 6
 #| fig-height: 6
 
+## We create an index for each participant: the difference in frequency of letter when this participant is talking to the Biased compared to when talking to the other. A high value in "yes" mean that the participant uses way less (biased or unbiased) letters when talking to the biased participant.
+#
 # df_agg3 <- df_agg %>%
 #   spread(TalkToBiased, Freq) %>%
 #   mutate(diff = No - Yes) 
@@ -3818,8 +4060,7 @@ for (gid in unique(df$GroupID)){
         filter(TypeTest == "ComGame",
                GroupID == gid,
                Round == myround,
-               pair == mypair) %>%
-        filter(GroupID != "1_Hetero") 
+               pair == mypair) 
         subdf <- subdf[order(subdf$index),]
         
         # look at each shape, find who is the second producer
@@ -3877,8 +4118,7 @@ for (gid in unique(df$GroupID)){
         filter(TypeTest == "ComGame",
                GroupID == gid,
                Round == myround,
-               pair == mypair) %>%
-        filter(GroupID != "1_Hetero") 
+               pair == mypair)
         subdf <- subdf[order(subdf$index),]
         
         # look at each shape, find who is the second producer
@@ -4080,7 +4320,7 @@ p6 <- ggplot(df_other, aes(x=Gender, fill=GroupType)) +
 p7 <- ggplot(df_other, aes(x=AccLearning, fill=GroupType)) +
   geom_density(alpha=0.5) +
   guides(fill=FALSE)
-p8 <- ggplot(df_other, aes(x=DistInitWords, fill=GroupType)) +
+p8 <- ggplot(df_other, aes(x=ProducSim, fill=GroupType)) +
   geom_density(alpha=0.5) +
   guides(fill=FALSE)
 
@@ -4102,9 +4342,9 @@ Let's look at the correlations between the numerical variables:
 #| fig-cap: "Correlation between the predictors."
 #| fig-width: 12
 #| fig-height: 11
-#| 
+
 df_other %>%
-  dplyr::select(prosoc, DictatorGame, Age, WorkingMem, CogFlexibility, AccLearning, DistInitWords, Gender) %>%
+  dplyr::select(prosoc, DictatorGame, Age, WorkingMem, CogFlexibility, AccLearning, ProducSim, Gender) %>%
   drop_na() %>%
   ggpairs(lower=list(continuous=wrap("smooth", colour="black")),
           upper = list(continuous = wrap("cor", size=6, colour = "black"))) +
@@ -4119,7 +4359,7 @@ We can look at all scores together:
 ```{r}
 
 # df_other  %>%
-#   dplyr::select(PartID, prosoc, DictatorGame, Age, WorkingMem, CogFlexibility, AccLearning, DistInitWords, Adaptability1, Adaptability2, Adaptability3, Adaptability4) %>%
+#   dplyr::select(PartID, prosoc, DictatorGame, Age, WorkingMem, CogFlexibility, AccLearning, ProducSim, Adaptability1, Adaptability2, Adaptability3, Adaptability4) %>%
 #   pivot_longer(names_to = "Feature", values_to = "Value", -c(PartID, Adaptability1, Adaptability2, Adaptability3, Adaptability4)) %>%
 #   pivot_longer(names_to = "Density", values_to = "dens_Value", -c(PartID, Feature, Value) ) %>%
 #   drop_na %>%
@@ -4187,7 +4427,7 @@ p7 <- ggplot(df_other2, aes(x=AccLearning, y=Adaptability1))+
   geom_smooth(method="lm") +
   theme_bw(base_size=15)
 
-p8 <- ggplot(df_other2, aes(x=DistInitWords, y=Adaptability1))+
+p8 <- ggplot(df_other2, aes(x=ProducSim, y=Adaptability1))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15)
@@ -4199,9 +4439,15 @@ Model:
 
 ```{r}
 
-model <- lmer(Adaptability1 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + DistInitWords + (1 | GroupNum), data = df_other2)
+# Model adaptability 1
+model <- lmer(Adaptability1 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + ProducSim + (1 | GroupNum), data = df_other2)
 summary(model)
 r.squaredGLMM(model)
+
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
 
 ```
 
@@ -4257,7 +4503,7 @@ p7 <- ggplot(df_other2, aes(x=AccLearning, y=Adaptability2))+
   geom_smooth(method="lm") +
   theme_bw(base_size=15)
 
-p8 <- ggplot(df_other2, aes(x=DistInitWords, y=Adaptability2))+
+p8 <- ggplot(df_other2, aes(x=ProducSim, y=Adaptability2))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15)
@@ -4270,9 +4516,15 @@ Model:
 
 ```{r}
 
-model <- lmer(Adaptability2 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + DistInitWords + (1 | GroupNum), data = df_other2)
+# model Adaptability 2
+model <- lmer(Adaptability2 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + ProducSim + (1 | GroupNum), data = df_other2)
 summary(model)
 r.squaredGLMM(model)
+
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
 
 ```
 
@@ -4292,41 +4544,41 @@ df_other2$GroupID <- paste(df_other2$GroupType, df_other2$GroupNum, sep="_")
 df_other$GroupID <- paste(df_other$GroupType, df_other$GroupNum, sep="_")
 
 # plot
-p1 <- ggplot(df_other2, aes(x=prosoc, y=Adaptability3))+
+p1 <- ggplot(df_other, aes(x=prosoc, y=Adaptability3))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15) 
 
-p2 <- ggplot(df_other2, aes(x=WorkingMem, y=Adaptability3))+
+p2 <- ggplot(df_other, aes(x=WorkingMem, y=Adaptability3))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15)
 
-p3 <- ggplot(df_other2, aes(x=CogFlexibility, y=Adaptability3))+
+p3 <- ggplot(df_other, aes(x=CogFlexibility, y=Adaptability3))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15)
 
-p4 <- ggplot(df_other2, aes(x=DictatorGame, y=Adaptability3))+
+p4 <- ggplot(df_other, aes(x=DictatorGame, y=Adaptability3))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15) 
 
-p5 <- ggplot(df_other2, aes(x=Age, y=Adaptability3))+
+p5 <- ggplot(df_other, aes(x=Age, y=Adaptability3))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15) 
 
-p6 <- ggplot(df_other2, aes(x=Gender, y=Adaptability3))+
+p6 <- ggplot(df_other, aes(x=Gender, y=Adaptability3))+
   geom_boxplot()+
   theme_bw(base_size=15) 
 
-p7 <- ggplot(df_other2, aes(x=AccLearning, y=Adaptability3))+
+p7 <- ggplot(df_other, aes(x=AccLearning, y=Adaptability3))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15)
 
-p8 <- ggplot(df_other2, aes(x=DistInitWords, y=Adaptability3))+
+p8 <- ggplot(df_other, aes(x=ProducSim, y=Adaptability3))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15)
@@ -4335,13 +4587,35 @@ grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8, nrow=2, ncol=4)
 
 ```
 
-Model:
+Model, including production from the biased participant:
 
 ```{r}
 
-model <- lmer(Adaptability3 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + DistInitWords + (1 | GroupID), data = df_other)
+# Model adaptability 3
+model <- lmer(Adaptability3 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + ProducSim + (1 | GroupID), data = df_other)
 summary(model)
 r.squaredGLMM(model)
+
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
+
+```
+
+Model, excluding production from the biased participant:
+
+```{r}
+model <- lmer(Adaptability3 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + ProducSim + (1 | GroupID), data = df_other[!(df_other$PartID==1 & df_other$GroupType=="Hetero"),])
+summary(model)
+r.squaredGLMM(model)
+
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
 
 ```
 
@@ -4358,41 +4632,41 @@ We look at the exact same plots using the score for ***Adaptability4***:
 
 
 # plot
-p1 <- ggplot(df_other2, aes(x=prosoc, y=Adaptability4))+
+p1 <- ggplot(df_other, aes(x=prosoc, y=Adaptability4))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15) 
 
-p2 <- ggplot(df_other2, aes(x=WorkingMem, y=Adaptability4))+
+p2 <- ggplot(df_other, aes(x=WorkingMem, y=Adaptability4))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15)
 
-p3 <- ggplot(df_other2, aes(x=CogFlexibility, y=Adaptability4))+
+p3 <- ggplot(df_other, aes(x=CogFlexibility, y=Adaptability4))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15)
 
-p4 <- ggplot(df_other2, aes(x=DictatorGame, y=Adaptability4))+
+p4 <- ggplot(df_other, aes(x=DictatorGame, y=Adaptability4))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15) 
 
-p5 <- ggplot(df_other2, aes(x=Age, y=Adaptability4))+
+p5 <- ggplot(df_other, aes(x=Age, y=Adaptability4))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15) 
 
-p6 <- ggplot(df_other2, aes(x=Gender, y=Adaptability4))+
+p6 <- ggplot(df_other, aes(x=Gender, y=Adaptability4))+
   geom_boxplot()+
   theme_bw(base_size=15) 
 
-p7 <- ggplot(df_other2, aes(x=AccLearning, y=Adaptability4))+
+p7 <- ggplot(df_other, aes(x=AccLearning, y=Adaptability4))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15)
 
-p8 <- ggplot(df_other2, aes(x=DistInitWords, y=Adaptability4))+
+p8 <- ggplot(df_other, aes(x=ProducSim, y=Adaptability4))+
   geom_point()+
   geom_smooth(method="lm") +
   theme_bw(base_size=15)
@@ -4401,18 +4675,39 @@ grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8, nrow=2, ncol=4)
 
 
 ```
+Model including the production from the biased participant:
 
 ```{r}
 
-model <- lmer(Adaptability4 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + DistInitWords + (1 | GroupID), data = df_other)
+# Model adaptability 4
+model <- lmer(Adaptability4 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + ProducSim + (1 | GroupID), data = df_other)
 summary(model)
 r.squaredGLMM(model)
 car::vif(model)
 
-# model <- lmer(Adaptability4 ~ prosoc*Age*Gender*CogFlexibility*DistInitWords + (1 | GroupID), data = df_other)
+# print diagnostic plots
+plots <- plot_model(model, type = "diag", show.ci = FALSE)
+plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
+ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
+
+```
+
+
+Model excluding productions from the biased participants in heterogenous groups:
+
+```{r}
+
+model <- lmer(Adaptability4 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + ProducSim + (1 | GroupID), data = df_other[!(df_other$PartID==1 & df_other$GroupType=="Hetero"),])
+summary(model)
+r.squaredGLMM(model)
+car::vif(model)
+
+# model <- lmer(Adaptability4 ~ prosoc*Age*Gender*CogFlexibility*ProducSim + (1 | GroupID), data = df_other)
 # summary(model)
 
 ```
+
 
 ```{r}
 # Same but with the variables being centered:
@@ -4424,9 +4719,9 @@ car::vif(model)
 #          DictatorGame_z = scale(DictatorGame, center = TRUE, scale = FALSE),
 #          Age_z = scale(Age, center = TRUE, scale = FALSE),
 #          AccLearning_z = scale(AccLearning, center = TRUE, scale = FALSE),
-#          DistInitWords_z = scale(DistInitWords, center = TRUE, scale = FALSE))
+#          ProducSim_z = scale(ProducSim, center = TRUE, scale = FALSE))
 # 
-# model <- lmer(Adaptability4 ~ prosoc_z + WorkingMem_z + CogFlexibility_z + DictatorGame_z + Age_z + Gender + AccLearning_z + DistInitWords_z + (1 | GroupID), data = df_other_z)
+# model <- lmer(Adaptability4 ~ prosoc_z + WorkingMem_z + CogFlexibility_z + DictatorGame_z + Age_z + Gender + AccLearning_z + ProducSim_z + (1 | GroupID), data = df_other_z)
 # summary(model)
 # r.squaredGLMM(model)
 
@@ -4473,7 +4768,7 @@ ggarrange(p_comsuccess, p_converg, p_distlabel, ncol=3, labels="AUTO", common.le
 # compute frequency (only biased letters)
 df_agg <- df %>%
   filter(TypeTest != "PassiveExposure",
-         Producer != "1") %>%
+         !(Producer == "1" & GroupType == "Hetero")) %>%
   dplyr::group_by(GroupType, GroupNum, Round) %>% 
   dplyr::summarise(Words = paste(Word, collapse = "")) %>%
   mutate(biased_count = str_count(Words, "k") + str_count(Words, "a"),
@@ -4503,7 +4798,7 @@ p_round <- p_round +
 # compute frequency (only biased letters)
 df_agg <- df %>%
   filter(TypeTest=="FirstTesting" | TypeTest=="SecondTesting",
-         Producer != "1") %>%
+         !(Producer == "1" & GroupType == "Hetero")) %>%
   dplyr::group_by(GroupType, GroupNum, Round, TypeTest) %>% 
   dplyr::summarise(Words = paste(Word, collapse = "")) %>%
   mutate(biased_count = str_count(Words, "k") + str_count(Words, "a"),
@@ -4538,8 +4833,6 @@ ggarrange(p_round, p_test, ncol=2, nrow=1, labels="AUTO", common.legend = TRUE, 
 
 ```
 
-
-
 ```{r}
 #| echo: false
 #| message: false
@@ -4552,7 +4845,7 @@ ggarrange(p_round, p_test, ncol=2, nrow=1, labels="AUTO", common.legend = TRUE, 
 # compute frequency (only biased letters)
 df_agg <- df %>%
   filter(TypeTest != "PassiveExposure",
-         Producer != "1") %>%
+         !(Producer == "1" & GroupType == "Hetero")) %>%
   dplyr::group_by(GroupType, GroupNum, Round) %>% 
   dplyr::summarise(Words = paste(Word, collapse = "")) %>%
   mutate(biased_count = str_count(Words, "k") + str_count(Words, "a"),
@@ -4575,13 +4868,10 @@ p_round <- p_round +
   theme(axis.title.y = element_text(size = 17),
         axis.title.x = element_text(size = 17)) 
 
-
-
-
 # compute frequency (only biased letters)
 df_agg <- df %>%
   filter(TypeTest=="FirstTesting" | TypeTest=="SecondTesting",
-         Producer != "1") %>%
+         !(Producer == "1" & GroupType == "Hetero")) %>%
   dplyr::group_by(GroupType, GroupNum, Round, TypeTest) %>% 
   dplyr::summarise(Words = paste(Word, collapse = "")) %>%
   mutate(biased_count = str_count(Words, "k") + str_count(Words, "a"),
@@ -4609,7 +4899,8 @@ p_test <- ggplot(df_agg, aes(x=TypeTest, y=Freq, fill=GroupType))+
   labs(x="", y="Mean freq of biased letters (%)") +
   facet_grid(. ~ GroupType) +
   guides(fill=FALSE, color=FALSE) +
-  theme(axis.title.y = element_text(size = 17))
+  theme(axis.title.y = element_text(size = 17)) +
+  ylim(17,39)
 
 
 ggarrange(p_round, p_test, ncol=2, nrow=1, labels="AUTO", common.legend = TRUE, legend="bottom", font.label = list(size = 16, color = "black"))
