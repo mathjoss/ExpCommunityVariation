@@ -12,8 +12,6 @@ After each group passation, we use the file `CleanUpFiles.R` to clean the raw fi
 
 The files in the `Data` folder are named after the group number and type, and it is saved as a .csv file. For instance, Group1HT.csv represents the data file for Group 1 Heterogenous.
 
-The files in the `Data_processed` folder are the same files as the ones in the data folder, except that we added the manually filled "distance" column for heterogenous groups. For more information about how this column was computed, please refer to the html file. 
-
 The files in the `Other` folder are different measures (prosociality, inverse efficiency, cognitive flexibility) are summarized in a separate data file starting with Other_Group…, which includes the group number and type. This file also contains information about age, gender, and results in the dictator game.
 
 The files in the `PreTest` folder concerns (as you may have guessed) the files from a pre-test. In this pre-test, the experimenter did a mistake when asking participants to switch seats. This results in a big mess. Sometimes participants were all standing up at the same time and they may have seen each other computers, which is bad. 

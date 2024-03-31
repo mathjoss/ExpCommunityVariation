@@ -36,6 +36,4 @@ No internet connection needed.
 
 - Then, use the program `CleanUpFiles.R` to clean the Raw files. See the README.md files inside the `InputFiles` folder for more information about this cleaning.
 
-- Then, add the column "distance" for the heterogenous groups. Look inside the file `SupplementaryMaterials.html` to see how we manually computed this distance. This will create a new file you can put in the `Data_processed` folder.
-
 - Run the files `SupplementaryMaterials.qmd` to analyze all data.
