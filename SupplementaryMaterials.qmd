@@ -2046,8 +2046,9 @@ ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
 
 Then, we look at:
 
--   "Hetero With Biased": convergence in groups that include the biased participant (what was computed before; 4 data)
--   "Hetero Without Biased": convergence in groups that does not inlude the biased participant (3 data)
+-   "Hetero With Biased": convergence in heterogeneous groups with all participants (what was computed before; 4 data)
+-   "Hetero Without Biased": convergence in heterogenous groups excluding the biased participant (3 data)
+-   "Control": convergence in control groups (4 data)
 
 ```{r }
 #| echo: false
@@ -2750,6 +2751,8 @@ table(strsplit(concat, ""))
 
 # we multiply this by 2 because there are two biased letters
 init_freq_biased <- mean(str_count(concat, "k")/str_count(concat))*100*2
+
+
 ```
 
 Thus, the initial frequency of each **biased** letter is of `r round(init_freq_biased, 2)` %.
@@ -4354,6 +4357,31 @@ df_other %>%
 
 ### What do predict adaptation?
 
+
+```{r}
+
+# Create new dataset
+df_other_z <- df_other %>%
+  mutate(prosoc_z = scale(prosoc, center = TRUE, scale = FALSE),
+         WorkingMem_z = scale(WorkingMem, center = TRUE, scale = FALSE),
+         CogFlexibility_z = scale(CogFlexibility, center = TRUE, scale = FALSE),
+         DictatorGame_z = scale(DictatorGame, center = TRUE, scale = FALSE),
+         Age_z = scale(Age, center = TRUE, scale = FALSE),
+         AccLearning_z = scale(AccLearning, center = TRUE, scale = FALSE),
+         ProducSim_z = scale(ProducSim, center = TRUE, scale = FALSE),
+         Gender_z = as.numeric(as.factor(Gender)) - 1)
+
+# create df with only hetero
+df_other2_z <- df_other_z %>% filter(GroupType == "Hetero")
+df_other2 <- df_other %>% filter(GroupType == "Hetero")
+
+# rename column
+df_other2_z$GroupID <- paste(df_other2_z$GroupType, df_other2_z$GroupNum, sep="_")
+df_other_z$GroupID <- paste(df_other_z$GroupType, df_other_z$GroupNum, sep="_")
+
+
+```
+
 We can look at all scores together:
 
 ```{r}
@@ -4387,10 +4415,6 @@ We first look at the measure using the score of ***Adaptability1***:
 #| fig-width: 10
 #| fig-height: 8
 
-
-# rename column
-df_other2 <- df_other %>%
-  filter(GroupType == "Hetero")
 
 # plot
 p1 <- ggplot(df_other2, aes(x=prosoc, y=Adaptability1))+
@@ -4440,7 +4464,7 @@ Model:
 ```{r}
 
 # Model adaptability 1
-model <- lmer(Adaptability1 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + ProducSim + (1 | GroupNum), data = df_other2)
+model <- lmer(Adaptability1 ~ prosoc_z + WorkingMem_z + CogFlexibility_z + DictatorGame_z + Age_z + Gender_z + AccLearning_z + ProducSim_z + (1 | GroupNum), data = df_other2_z)
 summary(model)
 r.squaredGLMM(model)
 
@@ -4464,9 +4488,6 @@ We look at the exact same plots using the score for ***Adaptability2***:
 #| fig-width: 10
 #| fig-height: 8
 
-# rename column
-df_other2 <- df_other %>%
-  filter(GroupType == "Hetero")
 
 # plot
 p1 <- ggplot(df_other2, aes(x=prosoc, y=Adaptability2))+
@@ -4517,7 +4538,7 @@ Model:
 ```{r}
 
 # model Adaptability 2
-model <- lmer(Adaptability2 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + ProducSim + (1 | GroupNum), data = df_other2)
+model <- lmer(Adaptability1 ~ prosoc_z + WorkingMem_z + CogFlexibility_z + DictatorGame_z + Age_z + Gender_z + AccLearning_z + ProducSim_z + (1 | GroupID), data = df_other2_z)
 summary(model)
 r.squaredGLMM(model)
 
@@ -4539,9 +4560,6 @@ We look at the exact same plots using the score for ***Adaptability3***:
 #| fig-width: 10
 #| fig-height: 8
 
-# rename column
-df_other2$GroupID <- paste(df_other2$GroupType, df_other2$GroupNum, sep="_")
-df_other$GroupID <- paste(df_other$GroupType, df_other$GroupNum, sep="_")
 
 # plot
 p1 <- ggplot(df_other, aes(x=prosoc, y=Adaptability3))+
@@ -4591,8 +4609,8 @@ Model, including production from the biased participant:
 
 ```{r}
 
-# Model adaptability 3
-model <- lmer(Adaptability3 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + ProducSim + (1 | GroupID), data = df_other)
+# Model adaptability 2
+model <- lmer(Adaptability2 ~ prosoc_z + WorkingMem_z + CogFlexibility_z + DictatorGame_z + Age_z + Gender_z + AccLearning_z + ProducSim_z + (1 | GroupID), data = df_other_z)
 summary(model)
 r.squaredGLMM(model)
 
@@ -4607,7 +4625,7 @@ ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
 Model, excluding production from the biased participant:
 
 ```{r}
-model <- lmer(Adaptability3 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + ProducSim + (1 | GroupID), data = df_other[!(df_other$PartID==1 & df_other$GroupType=="Hetero"),])
+model <- lmer(Adaptability3 ~ prosoc_z + WorkingMem_z + CogFlexibility_z + DictatorGame_z + Age_z + Gender_z + AccLearning_z + ProducSim_z + (1 | GroupID), data = df_other_z[!(df_other_z$PartID==1 & df_other_z$GroupType=="Hetero"),])
 summary(model)
 r.squaredGLMM(model)
 
@@ -4675,12 +4693,14 @@ grid.arrange(p1,p2,p3,p4,p5,p6,p7,p8, nrow=2, ncol=4)
 
 
 ```
+
 Model including the production from the biased participant:
 
 ```{r}
 
 # Model adaptability 4
-model <- lmer(Adaptability4 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + ProducSim + (1 | GroupID), data = df_other)
+model <- lmer(Adaptability4 ~ prosoc_z + WorkingMem_z + CogFlexibility_z + DictatorGame_z + Age_z + Gender_z + AccLearning_z + ProducSim_z + (1 | GroupID), data = df_other_z)
+
 summary(model)
 r.squaredGLMM(model)
 car::vif(model)
@@ -4698,7 +4718,7 @@ Model excluding productions from the biased participants in heterogenous groups:
 
 ```{r}
 
-model <- lmer(Adaptability4 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + ProducSim + (1 | GroupID), data = df_other[!(df_other$PartID==1 & df_other$GroupType=="Hetero"),])
+model <- lmer(Adaptability4 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame + Age + Gender + AccLearning + ProducSim + (1 | GroupID), data = df_other_z[!(df_other_z$PartID==1 & df_other_z$GroupType=="Hetero"),])
 summary(model)
 r.squaredGLMM(model)
 car::vif(model)
@@ -4710,20 +4730,6 @@ car::vif(model)
 
 
 ```{r}
-# Same but with the variables being centered:
-# 
-# df_other_z <- df_other %>%
-#   mutate(prosoc_z = scale(prosoc, center = TRUE, scale = FALSE),
-#          WorkingMem_z = scale(WorkingMem, center = TRUE, scale = FALSE),
-#          CogFlexibility_z = scale(CogFlexibility, center = TRUE, scale = FALSE),
-#          DictatorGame_z = scale(DictatorGame, center = TRUE, scale = FALSE),
-#          Age_z = scale(Age, center = TRUE, scale = FALSE),
-#          AccLearning_z = scale(AccLearning, center = TRUE, scale = FALSE),
-#          ProducSim_z = scale(ProducSim, center = TRUE, scale = FALSE))
-# 
-# model <- lmer(Adaptability4 ~ prosoc_z + WorkingMem_z + CogFlexibility_z + DictatorGame_z + Age_z + Gender + AccLearning_z + ProducSim_z + (1 | GroupID), data = df_other_z)
-# summary(model)
-# r.squaredGLMM(model)
 
 ```
 
@@ -4765,71 +4771,71 @@ ggarrange(p_comsuccess, p_converg, p_distlabel, ncol=3, labels="AUTO", common.le
 #| fig-width: 11
 #| fig-height: 5
 
-# compute frequency (only biased letters)
-df_agg <- df %>%
-  filter(TypeTest != "PassiveExposure",
-         !(Producer == "1" & GroupType == "Hetero")) %>%
-  dplyr::group_by(GroupType, GroupNum, Round) %>% 
-  dplyr::summarise(Words = paste(Word, collapse = "")) %>%
-  mutate(biased_count = str_count(Words, "k") + str_count(Words, "a"),
-         total_count = str_count(Words, "\\S"),
-         Freq = (biased_count / total_count)*100) %>%
-  mutate(GroupID = paste(GroupType, GroupNum, sep="_"))  %>%
-  mutate(Round2 = ifelse(Round == 10, 0, ifelse(Round == 9, 1, ifelse(Round==8, 2, ifelse(Round==7, 3, ifelse(Round==6, 4, ifelse(Round==5, 5, ifelse(Round==4, 6, ifelse(Round==3, 7, ifelse(Round==2, 8, ifelse(Round==1, 9, ifelse(Round==0, 10, NA))))))))))))
-
-# plot
-p_round <- ggplot(df_agg[!(df_agg$Round == 0 |df_agg$Round==10),], aes(x=Round, y=Freq, color=GroupType, group = interaction(GroupNum, GroupType)))+ geom_point()
-p_round <- add_grey_rect_1_9(p_round)
-p_round <- p_round + 
-  geom_hline(yintercept = init_freq_biased, linetype = "dashed") +
-  geom_point(alpha=0.5, size=1)+
-  geom_line(alpha=0.5)+
-  geom_smooth(method="lm", data=df_agg[!(df_agg$Round == 0 |df_agg$Round==10),], aes(x=Round, y=Freq, color=GroupType, group = GroupType)) +
-  labs(y="Mean freq of biased letters (%)    ", fill="Group") +
-  #facet_grid(GroupType ~ .) +
-  scale_x_continuous(breaks = c(0:10)) +
-  theme(axis.title.y = element_text(size = 17),
-        axis.title.x = element_text(size = 17)) +
-  scale_x_continuous(breaks = 1:9)
-
-
-
-
-# compute frequency (only biased letters)
-df_agg <- df %>%
-  filter(TypeTest=="FirstTesting" | TypeTest=="SecondTesting",
-         !(Producer == "1" & GroupType == "Hetero")) %>%
-  dplyr::group_by(GroupType, GroupNum, Round, TypeTest) %>% 
-  dplyr::summarise(Words = paste(Word, collapse = "")) %>%
-  mutate(biased_count = str_count(Words, "k") + str_count(Words, "a"),
-         total_count = str_count(Words, "\\S"),
-         Freq = (biased_count / total_count)*100) %>%
-  dplyr::select(-c(biased_count, total_count, Words)) %>%
-  mutate(GroupID = paste(GroupType, GroupNum, sep="_"))  %>%
-  mutate(Round2 = ifelse(Round == 10, 0, ifelse(Round == 9, 1, ifelse(Round==8, 2, ifelse(Round==7, 3, ifelse(Round==6, 4, ifelse(Round==5, 5, ifelse(Round==4, 6, ifelse(Round==3, 7, ifelse(Round==2, 8, ifelse(Round==1, 9, ifelse(Round==0, 10, NA)))))))))))) %>%
-  mutate(TypeTest = case_when(TypeTest == "FirstTesting" ~ "First Test",
-                              TypeTest == "SecondTesting" ~ "Last Test")) %>%
-  mutate(TypeTest = as.factor(TypeTest)) %>%
-  mutate(GroupType = as.character(GroupType)) %>%
-  mutate(GroupType = case_when(GroupType=="Hetero" ~ "Heterogenous",
-                               GroupType=="Control" ~ "Control")) %>%
-  mutate(GroupType = factor(GroupType, levels=c("Control", "Heterogenous")))
-
-
-# Plot
-p_test <- ggplot(df_agg, aes(x=TypeTest, y=Freq, fill=GroupType))+
-  geom_hline(yintercept = init_freq_biased, linetype = "dashed") +
-  geom_point(data=df_agg, aes(x=TypeTest, y=Freq, group=GroupNum), size=2) +
-  geom_boxplot(color="black", alpha=0.7,position= position_dodge(), width=0.3)+
-  theme_bw(base_size=20) +
-  geom_line(data=df_agg, aes(x=TypeTest, y=Freq, group=GroupNum), color="grey")+
-  labs(x="", y="Mean freq of biased letters (%)") +
-  facet_grid(. ~ GroupType) +
-  guides(fill=FALSE, color=FALSE) +
-  theme(axis.title.y = element_text(size = 17))
-
-
-ggarrange(p_round, p_test, ncol=2, nrow=1, labels="AUTO", common.legend = TRUE, legend="bottom", font.label = list(size = 16, color = "black"))
+# # compute frequency (only biased letters)
+# df_agg <- df %>%
+#   filter(TypeTest != "PassiveExposure",
+#          !(Producer == "1" & GroupType == "Hetero")) %>%
+#   dplyr::group_by(GroupType, GroupNum, Round) %>% 
+#   dplyr::summarise(Words = paste(Word, collapse = "")) %>%
+#   mutate(biased_count = str_count(Words, "k") + str_count(Words, "a"),
+#          total_count = str_count(Words, "\\S"),
+#          Freq = (biased_count / total_count)*100) %>%
+#   mutate(GroupID = paste(GroupType, GroupNum, sep="_"))  %>%
+#   mutate(Round2 = ifelse(Round == 10, 0, ifelse(Round == 9, 1, ifelse(Round==8, 2, ifelse(Round==7, 3, ifelse(Round==6, 4, ifelse(Round==5, 5, ifelse(Round==4, 6, ifelse(Round==3, 7, ifelse(Round==2, 8, ifelse(Round==1, 9, ifelse(Round==0, 10, NA))))))))))))
+# 
+# # plot
+# p_round <- ggplot(df_agg[!(df_agg$Round == 0 |df_agg$Round==10),], aes(x=Round, y=Freq, color=GroupType, group = interaction(GroupNum, GroupType)))+ geom_point()
+# p_round <- add_grey_rect_1_9(p_round)
+# p_round <- p_round + 
+#   geom_hline(yintercept = init_freq_biased, linetype = "dashed") +
+#   geom_point(alpha=0.5, size=1)+
+#   geom_line(alpha=0.5)+
+#   geom_smooth(method="lm", data=df_agg[!(df_agg$Round == 0 |df_agg$Round==10),], aes(x=Round, y=Freq, color=GroupType, group = GroupType)) +
+#   labs(y="Mean freq of biased letters (%)    ", fill="Group") +
+#   #facet_grid(GroupType ~ .) +
+#   scale_x_continuous(breaks = c(0:10)) +
+#   theme(axis.title.y = element_text(size = 17),
+#         axis.title.x = element_text(size = 17)) +
+#   scale_x_continuous(breaks = 1:9)
+# 
+# 
+# 
+# 
+# # compute frequency (only biased letters)
+# df_agg <- df %>%
+#   filter(TypeTest=="FirstTesting" | TypeTest=="SecondTesting",
+#          !(Producer == "1" & GroupType == "Hetero")) %>%
+#   dplyr::group_by(GroupType, GroupNum, Round, TypeTest) %>% 
+#   dplyr::summarise(Words = paste(Word, collapse = "")) %>%
+#   mutate(biased_count = str_count(Words, "k") + str_count(Words, "a"),
+#          total_count = str_count(Words, "\\S"),
+#          Freq = (biased_count / total_count)*100) %>%
+#   dplyr::select(-c(biased_count, total_count, Words)) %>%
+#   mutate(GroupID = paste(GroupType, GroupNum, sep="_"))  %>%
+#   mutate(Round2 = ifelse(Round == 10, 0, ifelse(Round == 9, 1, ifelse(Round==8, 2, ifelse(Round==7, 3, ifelse(Round==6, 4, ifelse(Round==5, 5, ifelse(Round==4, 6, ifelse(Round==3, 7, ifelse(Round==2, 8, ifelse(Round==1, 9, ifelse(Round==0, 10, NA)))))))))))) %>%
+#   mutate(TypeTest = case_when(TypeTest == "FirstTesting" ~ "First Test",
+#                               TypeTest == "SecondTesting" ~ "Last Test")) %>%
+#   mutate(TypeTest = as.factor(TypeTest)) %>%
+#   mutate(GroupType = as.character(GroupType)) %>%
+#   mutate(GroupType = case_when(GroupType=="Hetero" ~ "Heterogenous",
+#                                GroupType=="Control" ~ "Control")) %>%
+#   mutate(GroupType = factor(GroupType, levels=c("Control", "Heterogenous")))
+# 
+# 
+# # Plot
+# p_test <- ggplot(df_agg, aes(x=TypeTest, y=Freq, fill=GroupType))+
+#   geom_hline(yintercept = init_freq_biased, linetype = "dashed") +
+#   geom_point(data=df_agg, aes(x=TypeTest, y=Freq, group=GroupNum), size=2) +
+#   geom_boxplot(color="black", alpha=0.7,position= position_dodge(), width=0.3)+
+#   theme_bw(base_size=20) +
+#   geom_line(data=df_agg, aes(x=TypeTest, y=Freq, group=GroupNum), color="grey")+
+#   labs(x="", y="Mean freq of biased letters (%)") +
+#   facet_grid(. ~ GroupType) +
+#   guides(fill=FALSE, color=FALSE) +
+#   theme(axis.title.y = element_text(size = 17))
+# 
+# 
+# ggarrange(p_round, p_test, ncol=2, nrow=1, labels="AUTO", common.legend = TRUE, legend="bottom", font.label = list(size = 16, color = "black"))
 
 ```
 
@@ -4866,7 +4872,8 @@ p_round <- p_round +
   #facet_grid(GroupType ~ .) +
   scale_x_continuous(breaks = c(0:10)) +
   theme(axis.title.y = element_text(size = 17),
-        axis.title.x = element_text(size = 17)) 
+        axis.title.x = element_text(size = 17)) +
+  ylim(17,42.5)
 
 # compute frequency (only biased letters)
 df_agg <- df %>%
@@ -4880,8 +4887,8 @@ df_agg <- df %>%
   dplyr::select(-c(biased_count, total_count, Words)) %>%
   mutate(GroupID = paste(GroupType, GroupNum, sep="_"))  %>%
   mutate(Round2 = ifelse(Round == 10, 0, ifelse(Round == 9, 1, ifelse(Round==8, 2, ifelse(Round==7, 3, ifelse(Round==6, 4, ifelse(Round==5, 5, ifelse(Round==4, 6, ifelse(Round==3, 7, ifelse(Round==2, 8, ifelse(Round==1, 9, ifelse(Round==0, 10, NA)))))))))))) %>%
-  mutate(TypeTest = case_when(TypeTest == "FirstTesting" ~ "First Test",
-                              TypeTest == "SecondTesting" ~ "Last Test")) %>%
+  mutate(TypeTest = case_when(TypeTest == "FirstTesting" ~ "FirstTest",
+                              TypeTest == "SecondTesting" ~ "LastTest")) %>%
   mutate(TypeTest = as.factor(TypeTest)) %>%
   mutate(GroupType = as.character(GroupType)) %>%
   mutate(GroupType = case_when(GroupType=="Hetero" ~ "Heterogenous",

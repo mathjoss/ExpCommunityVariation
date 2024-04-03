@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Mathilde Josserand">
-<meta name="dcterms.date" content="2024-03-31">
+<meta name="dcterms.date" content="2024-04-03">
 
 <title>Analysis</title>
 <style>
@@ -144,7 +144,7 @@ ul.task-list li input[type="checkbox"] {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">March 31, 2024</p>
+      <p class="date">April 3, 2024</p>
     </div>
   </div>
   
@@ -2948,8 +2948,9 @@ F-statistic: 95.91 on 3 and 150 DF,  p-value: &lt; 2.2e-16</code></pre>
 </div>
 <p>Then, we look at:</p>
 <ul>
-<li>“Hetero With Biased”: convergence in groups that include the biased participant (what was computed before; 4 data)</li>
-<li>“Hetero Without Biased”: convergence in groups that does not inlude the biased participant (3 data)</li>
+<li>“Hetero With Biased”: convergence in heterogeneous groups with all participants (what was computed before; 4 data)</li>
+<li>“Hetero Without Biased”: convergence in heterogenous groups excluding the biased participant (3 data)</li>
+<li>“Control”: convergence in control groups (4 data)</li>
 </ul>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
@@ -3498,20 +3499,20 @@ TypTsLT:GTC  0.401 -0.707 -0.567</code></pre>
 <div class="cell" data-layout-align="center">
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 12 × 6
-   term                               estimate  lower upper type  level
-   &lt;chr&gt;                                 &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt;
- 1 (Intercept)                           29.8  27.8   32.0  norm   0.95
- 2 GroupTypeControl                      -1.07 -4.28   2.11 norm   0.95
- 3 TypeTestLast Test                     -4.48 -6.89  -1.92 norm   0.95
- 4 GroupTypeControl:TypeTestLast Test     4.05  0.144  7.26 norm   0.95
- 5 (Intercept)                           29.8  27.9   31.9  basic  0.95
- 6 GroupTypeControl                      -1.07 -4.26   1.79 basic  0.95
- 7 TypeTestLast Test                     -4.48 -6.97  -2.11 basic  0.95
- 8 GroupTypeControl:TypeTestLast Test     4.05  0.815  6.80 basic  0.95
- 9 (Intercept)                           29.8  27.6   31.6  perc   0.95
-10 GroupTypeControl                      -1.07 -3.93   2.13 perc   0.95
-11 TypeTestLast Test                     -4.48 -6.86  -2.00 perc   0.95
-12 GroupTypeControl:TypeTestLast Test     4.05  1.30   7.29 perc   0.95</code></pre>
+   term                               estimate   lower upper type  level
+   &lt;chr&gt;                                 &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt;
+ 1 (Intercept)                           29.8  27.2    32.2  norm   0.95
+ 2 GroupTypeControl                      -1.07 -4.50    2.48 norm   0.95
+ 3 TypeTestLast Test                     -4.48 -7.48   -1.68 norm   0.95
+ 4 GroupTypeControl:TypeTestLast Test     4.05  0.0375  8.15 norm   0.95
+ 5 (Intercept)                           29.8  27.2    32.2  basic  0.95
+ 6 GroupTypeControl                      -1.07 -4.14    2.33 basic  0.95
+ 7 TypeTestLast Test                     -4.48 -7.10   -1.51 basic  0.95
+ 8 GroupTypeControl:TypeTestLast Test     4.05  0.322   8.32 basic  0.95
+ 9 (Intercept)                           29.8  27.4    32.4  perc   0.95
+10 GroupTypeControl                      -1.07 -4.46    2.00 perc   0.95
+11 TypeTestLast Test                     -4.48 -7.46   -1.87 perc   0.95
+12 GroupTypeControl:TypeTestLast Test     4.05 -0.215   7.78 perc   0.95</code></pre>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -4192,6 +4193,9 @@ TalkToBsdYs -0.194</code></pre>
 </section>
 <section id="what-do-predict-adaptation" class="level3">
 <h3 class="anchored" data-anchor-id="what-do-predict-adaptation">What do predict adaptation?</h3>
+<div class="cell" data-layout-align="center">
+
+</div>
 <p>We can look at all scores together:</p>
 <div class="cell" data-layout-align="center">
 
@@ -4214,9 +4218,10 @@ TalkToBsdYs -0.194</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>Linear mixed model fit by REML. t-tests use Satterthwaite's method [
 lmerModLmerTest]
-Formula: Adaptability1 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame +  
-    Age + Gender + AccLearning + ProducSim + (1 | GroupNum)
-   Data: df_other2
+Formula: Adaptability1 ~ prosoc_z + WorkingMem_z + CogFlexibility_z +  
+    DictatorGame_z + Age_z + Gender_z + AccLearning_z + ProducSim_z +  
+    (1 | GroupNum)
+   Data: df_other2_z
 
 REML criterion at convergence: 94.1
 
@@ -4231,27 +4236,27 @@ Random effects:
 Number of obs: 21, groups:  GroupNum, 7
 
 Fixed effects:
-               Estimate Std. Error      df t value Pr(&gt;|t|)
-(Intercept)     24.5288    27.2033  7.1591   0.902    0.397
-prosoc          -3.8259     4.4046 10.6155  -0.869    0.404
-WorkingMem       1.5921     4.6609 11.9684   0.342    0.739
-CogFlexibility  -1.5782     6.3158  8.2278  -0.250    0.809
-DictatorGame    -2.0221     2.0809 11.7485  -0.972    0.351
-Age             -0.2419     0.5957 11.3888  -0.406    0.692
-GenderM         -0.1714     4.3611  6.9454  -0.039    0.970
-AccLearning     -8.2086    17.1805  9.7835  -0.478    0.643
-ProducSim       10.6719    22.3196 10.7742   0.478    0.642
+                 Estimate Std. Error      df t value Pr(&gt;|t|)
+(Intercept)        4.1033     2.7219  3.5991   1.507    0.214
+prosoc_z          -3.8259     4.4046 10.6155  -0.869    0.404
+WorkingMem_z       1.5921     4.6609 11.9684   0.342    0.739
+CogFlexibility_z  -1.5782     6.3158  8.2278  -0.250    0.809
+DictatorGame_z    -2.0221     2.0809 11.7485  -0.972    0.351
+Age_z             -0.2419     0.5957 11.3888  -0.406    0.692
+Gender_z          -0.1714     4.3611  6.9454  -0.039    0.970
+AccLearning_z     -8.2086    17.1805  9.7835  -0.478    0.643
+ProducSim_z       10.6719    22.3196 10.7742   0.478    0.642
 
 Correlation of Fixed Effects:
-            (Intr) prosoc WrkngM CgFlxb DcttrG Age    GendrM AccLrn
-prosoc      -0.826                                                 
-WorkingMem  -0.131 -0.294                                          
-CogFlexblty -0.427  0.181  0.416                                   
-DictatorGam -0.128  0.206 -0.352 -0.171                            
-Age         -0.822  0.735 -0.064  0.239 -0.070                     
-GenderM      0.427 -0.540  0.436  0.016 -0.077 -0.580              
-AccLearning -0.078  0.036  0.393  0.113  0.110  0.169  0.254       
-ProducSim    0.072 -0.231 -0.071 -0.003 -0.144 -0.295 -0.045 -0.892</code></pre>
+            (Intr) prsc_z WrknM_ CgFlx_ DcttG_ Age_z  Gndr_z AccLr_
+prosoc_z     0.224                                                 
+WorkingMm_z -0.165 -0.294                                          
+CgFlxblty_z -0.032  0.181  0.416                                   
+DictatrGm_z  0.132  0.206 -0.352 -0.171                            
+Age_z        0.240  0.735 -0.064  0.239 -0.070                     
+Gender_z    -0.396 -0.540  0.436  0.016 -0.077 -0.580              
+AccLernng_z  0.034  0.036  0.393  0.113  0.110  0.169  0.254       
+ProducSim_z -0.085 -0.231 -0.071 -0.003 -0.144 -0.295 -0.045 -0.892</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>            R2m       R2c
@@ -4260,7 +4265,7 @@ ProducSim    0.072 -0.231 -0.071 -0.003 -0.144 -0.295 -0.045 -0.892</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="./figures/unnamed-chunk-110-1.jpeg" class="img-fluid figure-img" width="1000"></p>
+<p><img src="./figures/unnamed-chunk-111-1.jpeg" class="img-fluid figure-img" width="1000"></p>
 </figure>
 </div>
 </div>
@@ -4282,57 +4287,54 @@ ProducSim    0.072 -0.231 -0.071 -0.003 -0.144 -0.295 -0.045 -0.892</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>Linear mixed model fit by REML. t-tests use Satterthwaite's method [
 lmerModLmerTest]
-Formula: Adaptability2 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame +  
-    Age + Gender + AccLearning + ProducSim + (1 | GroupNum)
-   Data: df_other2
+Formula: Adaptability1 ~ prosoc_z + WorkingMem_z + CogFlexibility_z +  
+    DictatorGame_z + Age_z + Gender_z + AccLearning_z + ProducSim_z +  
+    (1 | GroupID)
+   Data: df_other2_z
 
-REML criterion at convergence: 75.9
+REML criterion at convergence: 94.1
 
 Scaled residuals: 
      Min       1Q   Median       3Q      Max 
--1.29011 -0.44312 -0.05865  0.32637  1.59578 
+-1.19689 -0.50159 -0.08027  0.57271  0.91707 
 
 Random effects:
  Groups   Name        Variance Std.Dev.
- GroupNum (Intercept)  0.0     0.000   
- Residual             10.7     3.271   
-Number of obs: 21, groups:  GroupNum, 7
+ GroupID  (Intercept) 31.66    5.627   
+ Residual             30.88    5.557   
+Number of obs: 21, groups:  GroupID, 7
 
 Fixed effects:
-                Estimate Std. Error        df t value Pr(&gt;|t|)  
-(Intercept)      2.33576   14.53686  12.00000   0.161   0.8750  
-prosoc          -1.85364    2.05854  12.00000  -0.900   0.3856  
-WorkingMem       1.57906    1.97838  12.00000   0.798   0.4403  
-CogFlexibility   0.41123    3.21404  12.00000   0.128   0.9003  
-DictatorGame    -1.41578    0.95146  12.00000  -1.488   0.1626  
-Age              0.03073    0.28080  12.00000   0.109   0.9147  
-GenderM         -0.33332    2.28204  12.00000  -0.146   0.8863  
-AccLearning    -17.20183    8.33325  12.00000  -2.064   0.0613 .
-ProducSim       25.30525   10.46976  12.00000   2.417   0.0325 *
----
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+                 Estimate Std. Error      df t value Pr(&gt;|t|)
+(Intercept)        4.1033     2.7219  3.5991   1.507    0.214
+prosoc_z          -3.8259     4.4046 10.6155  -0.869    0.404
+WorkingMem_z       1.5921     4.6609 11.9684   0.342    0.739
+CogFlexibility_z  -1.5782     6.3158  8.2278  -0.250    0.809
+DictatorGame_z    -2.0221     2.0809 11.7485  -0.972    0.351
+Age_z             -0.2419     0.5957 11.3888  -0.406    0.692
+Gender_z          -0.1714     4.3611  6.9454  -0.039    0.970
+AccLearning_z     -8.2086    17.1805  9.7835  -0.478    0.643
+ProducSim_z       10.6719    22.3196 10.7742   0.478    0.642
 
 Correlation of Fixed Effects:
-            (Intr) prosoc WrkngM CgFlxb DcttrG Age    GendrM AccLrn
-prosoc      -0.862                                                 
-WorkingMem  -0.150 -0.200                                          
-CogFlexblty -0.458  0.318  0.238                                   
-DictatorGam -0.329  0.283 -0.201 -0.062                            
-Age         -0.839  0.750 -0.093  0.265  0.259                     
-GenderM      0.451 -0.522  0.354 -0.165 -0.124 -0.631              
-AccLearning  0.061 -0.061  0.230 -0.156  0.316  0.074  0.178       
-ProducSim   -0.139 -0.003  0.024  0.212 -0.303 -0.119 -0.043 -0.911
-optimizer (nloptwrap) convergence code: 0 (OK)
-boundary (singular) fit: see help('isSingular')</code></pre>
+            (Intr) prsc_z WrknM_ CgFlx_ DcttG_ Age_z  Gndr_z AccLr_
+prosoc_z     0.224                                                 
+WorkingMm_z -0.165 -0.294                                          
+CgFlxblty_z -0.032  0.181  0.416                                   
+DictatrGm_z  0.132  0.206 -0.352 -0.171                            
+Age_z        0.240  0.735 -0.064  0.239 -0.070                     
+Gender_z    -0.396 -0.540  0.436  0.016 -0.077 -0.580              
+AccLernng_z  0.034  0.036  0.393  0.113  0.110  0.169  0.254       
+ProducSim_z -0.085 -0.231 -0.071 -0.003 -0.144 -0.295 -0.045 -0.892</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>           R2m       R2c
-[1,] 0.3327252 0.3327252</code></pre>
+<pre><code>            R2m       R2c
+[1,] 0.06919029 0.5404263</code></pre>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="./figures/unnamed-chunk-112-1.jpeg" class="img-fluid figure-img" width="1000"></p>
+<p><img src="./figures/unnamed-chunk-113-1.jpeg" class="img-fluid figure-img" width="1000"></p>
 </figure>
 </div>
 </div>
@@ -4353,55 +4355,58 @@ boundary (singular) fit: see help('isSingular')</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>Linear mixed model fit by REML. t-tests use Satterthwaite's method [
 lmerModLmerTest]
-Formula: Adaptability3 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame +  
-    Age + Gender + AccLearning + ProducSim + (1 | GroupID)
-   Data: df_other
+Formula: Adaptability2 ~ prosoc_z + WorkingMem_z + CogFlexibility_z +  
+    DictatorGame_z + Age_z + Gender_z + AccLearning_z + ProducSim_z +  
+    (1 | GroupID)
+   Data: df_other_z
 
-REML criterion at convergence: -25.9
+REML criterion at convergence: 75.9
 
 Scaled residuals: 
      Min       1Q   Median       3Q      Max 
--2.29948 -0.54888  0.03979  0.65061  1.47043 
+-1.29011 -0.44312 -0.05865  0.32637  1.59578 
 
 Random effects:
  Groups   Name        Variance Std.Dev.
- GroupID  (Intercept) 0.005548 0.07448 
- Residual             0.016811 0.12966 
-Number of obs: 56, groups:  GroupID, 14
+ GroupID  (Intercept)  0.0     0.000   
+ Residual             10.7     3.271   
+Number of obs: 21, groups:  GroupID, 7
 
 Fixed effects:
-                Estimate Std. Error        df t value Pr(&gt;|t|)  
-(Intercept)    -0.371822   0.244969 44.557351  -1.518   0.1361  
-prosoc          0.028134   0.038642 43.033429   0.728   0.4705  
-WorkingMem     -0.020368   0.043481 46.867260  -0.468   0.6416  
-CogFlexibility  0.051575   0.101879 40.797515   0.506   0.6154  
-DictatorGame   -0.009334   0.030643 46.605488  -0.305   0.7620  
-Age            -0.001533   0.004143 41.085731  -0.370   0.7133  
-GenderM         0.020942   0.044440 43.879018   0.471   0.6398  
-AccLearning    -0.240484   0.148488 44.577433  -1.620   0.1124  
-ProducSim       0.509727   0.193199 44.365276   2.638   0.0114 *
+                  Estimate Std. Error        df t value Pr(&gt;|t|)   
+(Intercept)        3.29736    0.97015  12.00000   3.399  0.00528 **
+prosoc_z          -1.85364    2.05854  12.00000  -0.900  0.38559   
+WorkingMem_z       1.57906    1.97838  12.00000   0.798  0.44029   
+CogFlexibility_z   0.41123    3.21404  12.00000   0.128  0.90031   
+DictatorGame_z    -1.41578    0.95146  12.00000  -1.488  0.16255   
+Age_z              0.03073    0.28080  12.00000   0.109  0.91465   
+Gender_z          -0.33332    2.28204  12.00000  -0.146  0.88630   
+AccLearning_z    -17.20183    8.33325  12.00000  -2.064  0.06131 . 
+ProducSim_z       25.30525   10.46976  12.00000   2.417  0.03250 * 
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 Correlation of Fixed Effects:
-            (Intr) prosoc WrkngM CgFlxb DcttrG Age    GendrM AccLrn
-prosoc      -0.711                                                 
-WorkingMem  -0.390  0.105                                          
-CogFlexblty -0.321  0.202  0.311                                   
-DictatorGam -0.300 -0.001 -0.075 -0.079                            
-Age         -0.313 -0.006 -0.124 -0.032 -0.144                     
-GenderM     -0.148  0.188  0.008  0.084 -0.029 -0.093              
-AccLearning  0.185 -0.153  0.163  0.073  0.126 -0.173  0.234       
-ProducSim   -0.441  0.201  0.032 -0.016  0.017  0.111 -0.103 -0.838</code></pre>
+            (Intr) prsc_z WrknM_ CgFlx_ DcttG_ Age_z  Gndr_z AccLr_
+prosoc_z     0.332                                                 
+WorkingMm_z -0.216 -0.200                                          
+CgFlxblty_z  0.029  0.318  0.238                                   
+DictatrGm_z  0.245  0.283 -0.201 -0.062                            
+Age_z        0.425  0.750 -0.093  0.265  0.259                     
+Gender_z    -0.612 -0.522  0.354 -0.165 -0.124 -0.631              
+AccLernng_z  0.135 -0.061  0.230 -0.156  0.316  0.074  0.178       
+ProducSim_z -0.169 -0.003  0.024  0.212 -0.303 -0.119 -0.043 -0.911
+optimizer (nloptwrap) convergence code: 0 (OK)
+boundary (singular) fit: see help('isSingular')</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>           R2m       R2c
-[1,] 0.1489569 0.3601195</code></pre>
+[1,] 0.3327252 0.3327252</code></pre>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="./figures/unnamed-chunk-114-1.jpeg" class="img-fluid figure-img" width="1000"></p>
+<p><img src="./figures/unnamed-chunk-115-1.jpeg" class="img-fluid figure-img" width="1000"></p>
 </figure>
 </div>
 </div>
@@ -4411,10 +4416,11 @@ ProducSim   -0.441  0.201  0.032 -0.016  0.017  0.111 -0.103 -0.838</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>Linear mixed model fit by REML. t-tests use Satterthwaite's method [
 lmerModLmerTest]
-Formula: Adaptability3 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame +  
-    Age + Gender + AccLearning + ProducSim + (1 | GroupID)
-   Data: df_other[!(df_other$PartID == 1 &amp; df_other$GroupType == "Hetero"),  
-    ]
+Formula: Adaptability3 ~ prosoc_z + WorkingMem_z + CogFlexibility_z +  
+    DictatorGame_z + Age_z + Gender_z + AccLearning_z + ProducSim_z +  
+    (1 | GroupID)
+   Data: df_other_z[!(df_other_z$PartID == 1 &amp; df_other_z$GroupType ==  
+    "Hetero"), ]
 
 REML criterion at convergence: -33
 
@@ -4429,27 +4435,29 @@ Random effects:
 Number of obs: 49, groups:  GroupID, 14
 
 Fixed effects:
-                 Estimate Std. Error         df t value Pr(&gt;|t|)
-(Intercept)    -0.2083620  0.2305669 34.4339676  -0.904    0.372
-prosoc          0.0303311  0.0350553 35.9406462   0.865    0.393
-WorkingMem     -0.0475077  0.0425451 38.0386109  -1.117    0.271
-CogFlexibility  0.0618350  0.0916649 35.7784849   0.675    0.504
-DictatorGame    0.0009374  0.0272844 39.0750590   0.034    0.973
-Age             0.0005543  0.0041543 39.2380299   0.133    0.895
-GenderM         0.0286825  0.0401149 35.0562824   0.715    0.479
-AccLearning     0.0452152  0.1827187 37.6833403   0.247    0.806
-ProducSim       0.0260163  0.2379260 38.4265997   0.109    0.913
+                   Estimate Std. Error         df t value Pr(&gt;|t|)   
+(Intercept)      -0.1026441  0.0262396 17.1561746  -3.912  0.00111 **
+prosoc_z          0.0303311  0.0350553 35.9406462   0.865  0.39265   
+WorkingMem_z     -0.0475077  0.0425451 38.0386109  -1.117  0.27115   
+CogFlexibility_z  0.0618350  0.0916649 35.7784849   0.675  0.50428   
+DictatorGame_z    0.0009374  0.0272844 39.0750590   0.034  0.97277   
+Age_z             0.0005543  0.0041543 39.2380299   0.133  0.89453   
+Gender_z          0.0286825  0.0401149 35.0562824   0.715  0.47934   
+AccLearning_z     0.0452152  0.1827187 37.6833403   0.247  0.80590   
+ProducSim_z       0.0260163  0.2379260 38.4265997   0.109  0.91350   
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 Correlation of Fixed Effects:
-            (Intr) prosoc WrkngM CgFlxb DcttrG Age    GendrM AccLrn
-prosoc      -0.706                                                 
-WorkingMem  -0.440  0.102                                          
-CogFlexblty -0.329  0.260  0.214                                   
-DictatorGam -0.195 -0.045 -0.069 -0.092                            
-Age         -0.388  0.084  0.041 -0.013 -0.186                     
-GenderM     -0.014  0.106 -0.058  0.038  0.038 -0.218              
-AccLearning  0.171 -0.112  0.217 -0.008  0.210 -0.004  0.201       
-ProducSim   -0.361  0.136 -0.043  0.038 -0.106 -0.035 -0.119 -0.908</code></pre>
+            (Intr) prsc_z WrknM_ CgFlx_ DcttG_ Age_z  Gndr_z AccLr_
+prosoc_z    -0.054                                                 
+WorkingMm_z  0.046  0.102                                          
+CgFlxblty_z -0.028  0.260  0.214                                   
+DictatrGm_z  0.033 -0.045 -0.069 -0.092                            
+Age_z        0.148  0.084  0.041 -0.013 -0.186                     
+Gender_z    -0.473  0.106 -0.058  0.038  0.038 -0.218              
+AccLernng_z  0.090 -0.112  0.217 -0.008  0.210 -0.004  0.201       
+ProducSim_z -0.139  0.136 -0.043  0.038 -0.106 -0.035 -0.119 -0.908</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>           R2m       R2c
@@ -4458,7 +4466,7 @@ ProducSim   -0.361  0.136 -0.043  0.038 -0.106 -0.035 -0.119 -0.908</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="./figures/unnamed-chunk-115-1.jpeg" class="img-fluid figure-img" width="1000"></p>
+<p><img src="./figures/unnamed-chunk-116-1.jpeg" class="img-fluid figure-img" width="1000"></p>
 </figure>
 </div>
 </div>
@@ -4479,9 +4487,10 @@ ProducSim   -0.361  0.136 -0.043  0.038 -0.106 -0.035 -0.119 -0.908</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>Linear mixed model fit by REML. t-tests use Satterthwaite's method [
 lmerModLmerTest]
-Formula: Adaptability4 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame +  
-    Age + Gender + AccLearning + ProducSim + (1 | GroupID)
-   Data: df_other
+Formula: Adaptability4 ~ prosoc_z + WorkingMem_z + CogFlexibility_z +  
+    DictatorGame_z + Age_z + Gender_z + AccLearning_z + ProducSim_z +  
+    (1 | GroupID)
+   Data: df_other_z
 
 REML criterion at convergence: 2.3
 
@@ -4496,44 +4505,44 @@ Random effects:
 Number of obs: 56, groups:  GroupID, 14
 
 Fixed effects:
-                 Estimate Std. Error         df t value Pr(&gt;|t|)    
-(Intercept)     1.6474121  0.3114115 40.7813241   5.290 4.45e-06 ***
-prosoc         -0.0215632  0.0484942 38.5936247  -0.445   0.6591    
-WorkingMem      0.0124828  0.0564002 41.9955380   0.221   0.8259    
-CogFlexibility -0.0007215  0.1263691 37.2664798  -0.006   0.9955    
-DictatorGame   -0.0082334  0.0395368 41.4556476  -0.208   0.8361    
-Age            -0.0017282  0.0051478 37.4816895  -0.336   0.7390    
-GenderM         0.0053707  0.0560555 39.1659955   0.096   0.9242    
-AccLearning    -0.3796356  0.1880709 39.5658058  -2.019   0.0503 .  
-ProducSim       0.5098609  0.2441742 39.2527810   2.088   0.0433 *  
+                   Estimate Std. Error         df t value Pr(&gt;|t|)    
+(Intercept)       1.6743796  0.0520384 15.3073297  32.176 1.77e-15 ***
+prosoc_z         -0.0215632  0.0484942 38.5936249  -0.445   0.6591    
+WorkingMem_z      0.0124828  0.0564002 41.9955380   0.221   0.8259    
+CogFlexibility_z -0.0007215  0.1263691 37.2664798  -0.006   0.9955    
+DictatorGame_z   -0.0082334  0.0395368 41.4556476  -0.208   0.8361    
+Age_z            -0.0017282  0.0051478 37.4816895  -0.336   0.7390    
+Gender_z          0.0053707  0.0560555 39.1659955   0.096   0.9242    
+AccLearning_z    -0.3796356  0.1880709 39.5658058  -2.019   0.0503 .  
+ProducSim_z       0.5098609  0.2441742 39.2527811   2.088   0.0433 *  
 ---
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 Correlation of Fixed Effects:
-            (Intr) prosoc WrkngM CgFlxb DcttrG Age    GendrM AccLrn
-prosoc      -0.705                                                 
-WorkingMem  -0.403  0.121                                          
-CogFlexblty -0.325  0.203  0.334                                   
-DictatorGam -0.326  0.032 -0.073 -0.069                            
-Age         -0.281 -0.036 -0.121 -0.033 -0.156                     
-GenderM     -0.130  0.148 -0.005  0.088 -0.038 -0.046              
-AccLearning  0.144 -0.132  0.188  0.115  0.127 -0.149  0.247       
-ProducSim   -0.412  0.188  0.008 -0.048  0.027  0.093 -0.122 -0.839</code></pre>
+            (Intr) prsc_z WrknM_ CgFlx_ DcttG_ Age_z  Gndr_z AccLr_
+prosoc_z    -0.051                                                 
+WorkingMm_z  0.002  0.121                                          
+CgFlxblty_z -0.031  0.203  0.334                                   
+DictatrGm_z  0.013  0.032 -0.073 -0.069                            
+Age_z        0.016 -0.036 -0.121 -0.033 -0.156                     
+Gender_z    -0.346  0.148 -0.005  0.088 -0.038 -0.046              
+AccLernng_z -0.086 -0.132  0.188  0.115  0.127 -0.149  0.247       
+ProducSim_z  0.042  0.188  0.008 -0.048  0.027  0.093 -0.122 -0.839</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>            R2m       R2c
 [1,] 0.06788929 0.5583678</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>        prosoc     WorkingMem CogFlexibility   DictatorGame            Age 
-      1.130551       1.362975       1.178453       1.182312       1.058726 
-        Gender    AccLearning      ProducSim 
-      1.176554       4.852170       4.322597 </code></pre>
+<pre><code>        prosoc_z     WorkingMem_z CogFlexibility_z   DictatorGame_z 
+        1.130551         1.362975         1.178453         1.182312 
+           Age_z         Gender_z    AccLearning_z      ProducSim_z 
+        1.058726         1.176554         4.852170         4.322597 </code></pre>
 </div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="./figures/unnamed-chunk-117-1.jpeg" class="img-fluid figure-img" width="1000"></p>
+<p><img src="./figures/unnamed-chunk-118-1.jpeg" class="img-fluid figure-img" width="1000"></p>
 </figure>
 </div>
 </div>
@@ -4545,8 +4554,8 @@ ProducSim   -0.412  0.188  0.008 -0.048  0.027  0.093 -0.122 -0.839</code></pre>
 lmerModLmerTest]
 Formula: Adaptability4 ~ prosoc + WorkingMem + CogFlexibility + DictatorGame +  
     Age + Gender + AccLearning + ProducSim + (1 | GroupID)
-   Data: df_other[!(df_other$PartID == 1 &amp; df_other$GroupType == "Hetero"),  
-    ]
+   Data: df_other_z[!(df_other_z$PartID == 1 &amp; df_other_z$GroupType ==  
+    "Hetero"), ]
 
 REML criterion at convergence: -1.8
 
@@ -4604,7 +4613,7 @@ ProducSim   -0.324  0.078 -0.037 -0.007 -0.091 -0.063 -0.152 -0.908</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="./figures/unnamed-chunk-120-1.jpeg" class="img-fluid figure-img" width="1000"></p>
+<p><img src="./figures/unnamed-chunk-121-1.jpeg" class="img-fluid figure-img" width="1000"></p>
 </figure>
 </div>
 </div>
@@ -4625,21 +4634,14 @@ ProducSim   -0.324  0.078 -0.037 -0.007 -0.091 -0.063 -0.152 -0.908</code></pre>
 </div>
 </div>
 <div class="cell" data-layout-align="center">
-<div class="cell-output-display">
-<div id="fig-2-chapter" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure">
-<p><img src="./figures/fig-2-chapter-1.jpeg" class="img-fluid figure-img" width="1100"></p>
-<p></p><figcaption class="figure-caption"><strong>Figure</strong>&nbsp;37<strong>.</strong> <strong>?(caption)</strong></figcaption><p></p>
-</figure>
-</div>
-</div>
+
 </div>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div id="fig-2-chapterbis" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure">
 <p><img src="./figures/fig-2-chapterbis-1.jpeg" class="img-fluid figure-img" width="1100"></p>
-<p></p><figcaption class="figure-caption"><strong>Figure</strong>&nbsp;38<strong>.</strong> <strong>?(caption)</strong></figcaption><p></p>
+<p></p><figcaption class="figure-caption"><strong>Figure</strong>&nbsp;37<strong>.</strong> <strong>?(caption)</strong></figcaption><p></p>
 </figure>
 </div>
 </div>
