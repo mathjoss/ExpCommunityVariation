@@ -1,7 +1,7 @@
 ---
 title: "Analysis"
 subtitle: "Full analyses and plots"
-author: "Mathilde Josserand"
+author: "Anonymous"
 date: "`r date()`"
 format:
   html: 
@@ -446,6 +446,8 @@ df_other <- df_other %>%
 
 This section provides additional information concerning the Method. For the general design, please refer to the main text.
 
+**If you want to replicate the experiment, you will find the code for the experiment and also a file (`How to conduct the experiment.docx`) explaining steps by step how to proceed in the folder `Program_Experiment` in my github [ANONYMOUS-TO-REPLACE].**
+
 ## Participants
 
 `r nrow(df_other)` participants participated in this study (`r nrow(df_other[df_other$Gender=="F",])` women and `r nrow(df_other[df_other$Gender=="M",])` men). They were between the ages of 18 and 50 (M= `r round(mean(df_other$Age))`, SD=`r round(sd(df_other$Age))` ). Please refer to [Predictors] to see more about the distribution of age, gender, and other measures.
@@ -570,25 +572,31 @@ The code of the task-switching experiment and the prosociality experiment are al
 
 # Data
 
-## Terminology
+## Terminology & typographic conventions
 
 Throughout the results, we will use the following terminology:
 
--   *Group* refers to the group ID: when using the terminology "for each group", I will mean for each group of 4 that came to the lab.
+-   **Group**: when using the terminology "for each group", I will mean for each group of 4 that came to the lab. In the R data, we used several variables: *GroupNum* refers to the number of the group (e.g, 1, 2, 3, 4, 5, 6, 7), *GroupType* refers to the type of the group (control versus homogenous), and *GroupID* is the combination of the two (1_Control, 2_Control..., 1_Hetero.., 7_Hetero). When saying "for each group", I implicitely imply "for each GroupID".
 
--   *Condition* refers to the group type: heterogenous or control.
+-   **Initial labels** refers to the 8 initial words used to describe aliens presented in the passive exposure phase (aike, nusa, ...)
 
--   *Initial labels* refers to the 8 initial words used to describe aliens presented in the passive exposure
+-   **Unbiased participants** are participants 2, 3, and 4 (who can produce all letters) and **biased participant** refers to participant 1 (who cannot produce a and k). This is consistent across all groups.
 
--   *Unbiased participants* are participants 2, 3, and 4 (who can produce all letters) and *biased participant* refers to participant 1 (who cannot produce a and k). This is consistent across all groups.
+-   **Unbiased letters** designate letters who can be produced by all participants (p, s, n, e, i, u) and **biased letters** designate the 2 letters that cannot be produced by the biased participants (k, a)
 
--   *Unbiased letters* designate letters who can be produced by all participants (p, s, n, e, i, u) and *biased letters* designate the 2 letters that cannot be produced by the biased participants
+Typographic conventions:
+
+- *variable names* is represented using *italic text*
+
+- **emphasis** is represented using **bold text**
+
+- `software`, `programming concepts`, or `files/folders'` name (e.g., applications, packages or function names) are represented using `fixed font text`
 
 ## Read files
 
 We proceed and clean the files using the following methods:
 
-After each group passation, we use `CleanUpFiles.R` to perform the following steps:
+After each group passation, we use `CleanUpFiles.R` (see folder `InputFiles` of my github folder [ANONYMOUS]) to perform the following steps:
 
 1.  **Data.** merge the dataset obtained from the 4 participants into 1 single file using the R script
 
@@ -600,7 +608,7 @@ After each group passation, we use `CleanUpFiles.R` to perform the following ste
 
 The "***data***" files are named after the group number and type, and it is saved as a .csv file. For instance, Group1HT.csv represents the data file for Group 1 Heterogenous.
 
-The "***other***" measures (prosociality, inverse efficiency, cognitive flexibility) are summarized in a separate data file starting with `Other_Group…,` which includes the group number and type. This file also contains information about **age**, **gender**, and results in the **dictator game**.
+The "***other***" measures (prosociality, inverse efficiency, cognitive flexibility) are summarized in a separate data file starting with `Other_Groupâ€¦,` which includes the group number and type. This file also contains information about **age**, **gender**, and results in the **dictator game**.
 
 We merge datasets from all groups, thus obtaining two datasets:
 
@@ -1562,7 +1570,7 @@ If they do not adapt, either by using the initial label that contains as many bi
 
 -   unbiased participants adapt mostly by using another label which does not feature any biased letter (or less frequently), and sometimes they adapt by copying the label used by the biased participant
 
-## 1 - How heterogeneity may affect language evolution
+## 1 - How did language evolve in the heterogeneous groups?
 
 In this part, we will find the plots and the models that are referred in the main paper as:
 
@@ -1672,7 +1680,7 @@ plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
 ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
 ```
 
-There is a significant improvement in performance with time in both conditions (control and heterogenous), as shown by the main effect of the Round2 variable. A **lower performance is observed in the heterogenous groups** than in the control group, as shown by the main effect of the GroupType variable depsite the very high performance reached by heterogenous Group 2. Moreover, no interaction effect between group type and round is present.
+There is a significant improvement in performance with time in both group type (control and heterogenous), as shown by the main effect of the Round2 variable. A **lower performance is observed in the heterogenous groups** than in the control group, as shown by the main effect of the GroupType variable depsite the very high performance reached by heterogenous Group 2. Moreover, no interaction effect between group type and round is present.
 
 From this analysis, it is clear that the average communicative success is lower in heterogeneous groups compared to control groups. However, it could be due to the fact that heterogeneous groups include interactions with a biased participants. Thus, it is interesting to split the heterogeneous groups into two categories:
 
@@ -2192,7 +2200,7 @@ We look at the evolution of production similarity for each shape:
 #| echo: false
 #| message: false
 #| warning: false
-#| label: fig-evolution-ProducSim
+#| label: fig-evolution-ProducSim-sha
 #| fig-cap: "Evolution of the production similarity at each round, for each shape. Please note that this plot does not include the productions of the biased participant."
 #| fig-width: 10
 #| fig-height: 8
@@ -2216,6 +2224,34 @@ p <- p + geom_point(size=5) +
 p
 ```
 
+To see the production similarity by group:
+```{r }
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-evolution-ProducSim
+#| fig-cap: "Evolution of the production similarity at each round, for each shape. Please note that this plot does not include the productions of the biased participant."
+#| fig-width: 10
+#| fig-height: 8
+
+# aggregate data
+df_agg <- df %>%
+  filter(TypeTest != "PassiveExposure") %>%
+  dplyr::group_by(GroupType, Round, GroupNum) %>%
+  dplyr::summarize(mean_lev_dis = mean(ProducSim))
+
+# Plot
+p <- ggplot(df_agg, aes(x=Round, y=mean_lev_dis, color=GroupNum, group=GroupNum)) + geom_point()
+p <- add_grey_rect_0_10(p) 
+p <- p + geom_point(size=5) +
+  geom_line(size=1) +
+  facet_grid(GroupType ~ .) +
+  labs(y="Production similarity", fill="GroupNum") +
+  scale_x_continuous(breaks = c(0:10)) +
+  scale_color_viridis_d()
+p
+```
+
 We observe that **certain shapes are more effectively remembered than others**. For instance, "aike" and "nus" are often well-remembered, while "puak" tends to be frequently forgotten.
 
 This plot also reveals that individuals in the control group often converge on the initial labels in the end, even if they initially forget it. However, in the heterogenous group, this convergence does not occur. Participants' productions tend to become slightly closer to the initial labels, but in the end, the words still remain quite different, **even for words that did not contain a biased letter** (nus and esip)!
@@ -2226,7 +2262,7 @@ We look at the same plot aggregated by group type. Please note that the followin
 #| echo: false
 #| message: false
 #| warning: false
-#| label: fig-evolution-ProducSim-agg
+#| label: fig-evolution-ProducSim-agg-group
 #| fig-cap: "Same plot as above, but aggregated by shape. Please note that this plot does not include the productions of the biased participant"
 #| fig-width: 9
 #| fig-height: 6
@@ -2332,6 +2368,104 @@ summary(model)
 plots <- plot_model(model, type = "diag", show.ci = FALSE)
 plots <- lapply(plots, function(p) p + theme(text = element_text(size = 12)))
 ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
+
+```
+### Production similarity with biased participant
+
+Here, we look at a different index: how similar are the productions from the unbiased participants with the productions from the biased participants. 
+We do this by computing the levenshtein distance between the productions from the unbiased, and the production of the biased used in this round. 
+
+We do this for both groups, in order to check, but please note that in control groups we note "Participant 1" (who is unbiased) as the biased participant.
+
+```{r}
+
+# Initialize empty dataframe
+df_all <- df
+df_all$SimBiased <- NA
+df_all <- df_all[FALSE, ]
+
+# Loop for each round, group ID
+
+for (gid in unique(df$GroupID)){
+  
+  for (myround in unique(df$Round)){
+    
+    # filter production from biased participant
+    prodbiased <- df %>%
+      filter(GroupID==gid & Round == myround & Producer == 1) %>%
+      mutate(WordBiased = Word)
+    
+    # add this column to the rest of the participant
+    produnbiased <- df %>% 
+      filter(GroupID==gid & Round == myround & Producer != 1) %>%
+      left_join(prodbiased %>% dplyr::select(Shape, WordBiased), by = "Shape")
+    
+    # rbind both dataframe
+    prodall <- rbind(prodbiased, produnbiased)
+    
+    # compute distance to production of biased participant
+    prodall$SimBiased <- NA
+    for (row in c(1:nrow(prodall))){
+      prodall$SimBiased[row] <- 1 - 
+        normdist(prodall$Word[row], as.character(prodall$WordBiased[row]))
+    }
+
+    # add this to a big dataframe
+    df_all <- rbind(df_all, prodall)
+  }
+
+}
+
+```
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| label: fig-evolution-SimBiased-distinct
+#| fig-cap: "Evolution of the production similarity of unbiased participants with the biased participants. ."
+#| fig-width: 6
+#| fig-height: 6
+
+# aggregate data
+df_agg <- df_all %>%
+  filter(TypeTest != "PassiveExposure" & !(GroupType == "Hetero" & Producer == 1 )) %>%
+  dplyr::group_by(GroupType, Round, GroupNum) %>%
+  dplyr::summarize(mean_SimBiased = mean(SimBiased))
+
+# Plot
+p <- ggplot(df_agg, aes(x=Round, y=mean_SimBiased, color=GroupNum, group=GroupNum)) + geom_point()
+p <- add_grey_rect_0_10(p) 
+p <- p + geom_point(size=5) +
+  geom_line(size=1) +
+  facet_grid(GroupType ~ .) +
+  labs(y="Production similarity", fill="GroupNum") +
+  scale_x_continuous(breaks = c(0:10)) +
+  scale_color_viridis_d()
+p
+
+```
+
+
+```{r}
+
+# aggregate data
+df_agg <- df_all %>%
+  filter( TypeTest != "PassiveExposure" & !(GroupType == "Hetero" & Producer == 1) & Round != 0 & Round != 10) %>%
+  dplyr::group_by(GroupType, Round, GroupNum) %>%
+  dplyr::summarize(mean_SimBiased = mean(SimBiased))
+
+# Plot
+p <- ggplot(df_agg, aes(x=Round, y=mean_SimBiased)) + geom_point()
+p <- add_grey_rect_1_9(p) 
+p <- p + geom_point(size=5, color="black", alpha=0.3) +
+  geom_line(data=df_agg, aes(x=Round, y=mean_SimBiased, group=GroupNum), size=1, color="black", alpha=0.3) +
+  facet_grid(GroupType ~ .) +
+  labs(y="Prod similarity with biased", fill="GroupNum") +
+  scale_x_continuous(breaks = c(0:10)) +
+  scale_color_viridis_d() +
+  geom_smooth(data=df_agg, aes(x=Round, y=mean_SimBiased))
+p
 
 ```
 
@@ -2709,7 +2843,7 @@ summary(model)
 
 ```
 
-## 2 - Group-adaptation to the biased participants
+## 2 - Has the language of the group adapted to the specificity of the biased participant?
 
 In this part, we will look at a set of different models.
 
@@ -3156,6 +3290,27 @@ After communicating labels:
 
 kable(last_name)
 ```
+
+Let's see if this is significant:
+
+```{r}
+
+# Look at the learning accuracy for each group
+df_agg <- df %>%
+  filter(TypeTest == "FirstTesting",
+         GroupType == "Hetero") %>%
+  group_by(Producer, TypeTest, GroupNum, GroupType) %>%
+  summarize(mean_acc = mean(ACC)*100) %>%
+  mutate(Producer = as.character(Producer)) %>%
+  mutate(Producer = ifelse(Producer == "1", "1 (biased)", Producer)) %>%
+  mutate(GroupOK = ifelse(GroupNum == 2 | GroupNum==6, "DidNotAdapt", "DidAdapt"))
+
+summary(lmer(mean_acc ~ GroupOK + (1 | GroupNum), data=df_agg, control=lmerControl(optimizer="bobyqa")))
+
+summary(lm(mean_acc ~ GroupOK, data=df_agg))
+
+```
+
 
 In order to look more precisely at the relation between learning accuracy and adaptability, please refer to part \[3 - Adaptability\] and subpart [What do predict adaptation?]
 
@@ -3641,7 +3796,9 @@ ggarrange(p1, p2, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
 
 ```
 
-## 3 - Pair-level adaptation to the biased participant
+## 3 - Who adapts and when? 
+
+### Pair-level adaptation
 
 We focus here on the pair-level: we compare the productions of the participants in the pair excluding the biased participants (pair 2 - 3, 3 - 4, and 2 - 4) to the production used by pairs involving the biased participant (pair 1 - 2, 1 - 3, and 1 - 4). Important note: the numbers of words considered when omparing between pair without and with the biased participant differ, as we do not consider the productions of Participant 1. For example, in Round 1, we compare the output of:
 
@@ -3985,9 +4142,10 @@ ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
 
 ```
 
-## 3bis - Adaptability
 
-### Measures
+### Predictors of adaptability
+
+#### Our measures of adaptability
 
 We compute three measures of adaptability based on the ratio of letter frequency:
 
@@ -4289,7 +4447,7 @@ The correlation netween the measure for Adaptability 1 and 2 is quite low, while
 
 ```
 
-### Predictors
+#### Summary predictors
 
 However, we will still try to observe how our different metrics (such as age, gender...: see [Method]) correlate with the adaptability scores. First, we look at the variable distribution.
 
@@ -4355,8 +4513,7 @@ df_other %>%
         axis.text = element_text(size = 10))
 ```
 
-### What do predict adaptation?
-
+#### Predicting adaptation
 
 ```{r}
 
@@ -4475,7 +4632,7 @@ ggarrange(plots[[1]], plots[[2]], plots[[3]], plots[[4]], nrow = 2, ncol = 2)
 
 ```
 
-R²m focuses solely on the fixed effects' contribution to explaining variance, while R²c takes into account both the fixed effects and the random effects.
+RÂ²m focuses solely on the fixed effects' contribution to explaining variance, while RÂ²c takes into account both the fixed effects and the random effects.
 
 We look at the exact same plots using the score for ***Adaptability2***:
 
